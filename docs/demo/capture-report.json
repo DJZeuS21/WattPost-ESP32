@@ -1,0 +1,363 @@
+{
+  "sourceCommit": "b20dceaa01a0039dd1a047d96e04e71ca8e14542",
+  "webTree": "e6131a2a1a4765b1ecabde9031f86fd65533639b",
+  "browser": "153.0.8010.12",
+  "now": "2026-10-24T17:00:00.000Z",
+  "checks": [
+    {
+      "name": "dashboard",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "",
+      "width": 1600,
+      "scrollWidth": 1600,
+      "content": 839,
+      "records": 288,
+      "canvases": [
+        {
+          "id": "charge-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "discharge-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "temperature-chart",
+          "datasets": [
+            145,
+            145,
+            145
+          ]
+        },
+        {
+          "id": "trend-chart",
+          "datasets": [
+            145
+          ]
+        }
+      ],
+      "image": {
+        "width": 1600,
+        "height": 658
+      }
+    },
+    {
+      "name": "dashboard-full",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "",
+      "width": 1600,
+      "scrollWidth": 1600,
+      "content": 839,
+      "records": 288,
+      "canvases": [
+        {
+          "id": "charge-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "discharge-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "temperature-chart",
+          "datasets": [
+            145,
+            145,
+            145
+          ]
+        },
+        {
+          "id": "trend-chart",
+          "datasets": [
+            145
+          ]
+        }
+      ],
+      "image": {
+        "width": 1600,
+        "height": 2265
+      }
+    },
+    {
+      "name": "history",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "#history",
+      "width": 1600,
+      "scrollWidth": 1600,
+      "content": 1409,
+      "records": 2016,
+      "canvases": [
+        {
+          "id": "history-power-chart",
+          "datasets": [
+            145,
+            145
+          ]
+        },
+        {
+          "id": "history-soc-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "history-mode-chart",
+          "datasets": [
+            3
+          ]
+        },
+        {
+          "id": "history-detail-chart",
+          "datasets": [
+            145
+          ]
+        }
+      ],
+      "image": {
+        "width": 1600,
+        "height": 1770
+      }
+    },
+    {
+      "name": "history-overview",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "#history",
+      "width": 1600,
+      "scrollWidth": 1600,
+      "content": 1387,
+      "records": 2016,
+      "canvases": [
+        {
+          "id": "history-power-chart",
+          "datasets": [
+            145,
+            145
+          ]
+        },
+        {
+          "id": "history-soc-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "history-mode-chart",
+          "datasets": [
+            3
+          ]
+        },
+        {
+          "id": "history-detail-chart",
+          "datasets": [
+            145
+          ]
+        }
+      ],
+      "image": {
+        "width": 1600,
+        "height": 785
+      }
+    },
+    {
+      "name": "history-temperature",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "#history",
+      "width": 1600,
+      "scrollWidth": 1600,
+      "content": 1400,
+      "records": 2016,
+      "canvases": [
+        {
+          "id": "history-power-chart",
+          "datasets": [
+            145,
+            145
+          ]
+        },
+        {
+          "id": "history-soc-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "history-mode-chart",
+          "datasets": [
+            3
+          ]
+        },
+        {
+          "id": "history-detail-chart",
+          "datasets": [
+            145
+          ]
+        }
+      ],
+      "image": {
+        "width": 1600,
+        "height": 1770
+      }
+    },
+    {
+      "name": "history-week",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "#history",
+      "width": 1600,
+      "scrollWidth": 1600,
+      "content": 1377,
+      "records": 2016,
+      "canvases": [
+        {
+          "id": "history-power-chart",
+          "datasets": [
+            1009,
+            1009
+          ]
+        },
+        {
+          "id": "history-soc-chart",
+          "datasets": [
+            1009
+          ]
+        },
+        {
+          "id": "history-mode-chart",
+          "datasets": [
+            3
+          ]
+        },
+        {
+          "id": "history-detail-chart",
+          "datasets": [
+            1009
+          ]
+        }
+      ],
+      "image": {
+        "width": 1600,
+        "height": 1770
+      }
+    },
+    {
+      "period14d": true,
+      "records": 2017,
+      "chartPoints": 2017
+    },
+    {
+      "bmsSettings": true,
+      "rows": 53,
+      "searchFilteredRows": 5,
+      "searchCleared": true
+    },
+    {
+      "name": "bms-settings",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "#bms-settings",
+      "width": 1600,
+      "scrollWidth": 1600,
+      "content": 5648,
+      "records": 2017,
+      "canvases": [],
+      "image": {
+        "width": 1600,
+        "height": 2586
+      }
+    },
+    {
+      "name": "dashboard-mobile",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "#dashboard",
+      "width": 390,
+      "scrollWidth": 390,
+      "content": 821,
+      "records": 2017,
+      "canvases": [
+        {
+          "id": "charge-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "discharge-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "temperature-chart",
+          "datasets": [
+            145,
+            145,
+            145
+          ]
+        },
+        {
+          "id": "trend-chart",
+          "datasets": [
+            145
+          ]
+        }
+      ],
+      "image": {
+        "width": 390,
+        "height": 654
+      }
+    },
+    {
+      "name": "history-mobile",
+      "title": "WattPost — Battery Energy Monitoring",
+      "url": "#history",
+      "width": 390,
+      "scrollWidth": 390,
+      "content": 1387,
+      "records": 2017,
+      "canvases": [
+        {
+          "id": "history-power-chart",
+          "datasets": [
+            145,
+            145
+          ]
+        },
+        {
+          "id": "history-soc-chart",
+          "datasets": [
+            145
+          ]
+        },
+        {
+          "id": "history-mode-chart",
+          "datasets": [
+            3
+          ]
+        },
+        {
+          "id": "history-detail-chart",
+          "datasets": [
+            145
+          ]
+        }
+      ],
+      "image": {
+        "width": 390,
+        "height": 946
+      }
+    }
+  ],
+  "errors": [],
+  "apiPaths": [
+    "/api/live",
+    "/api/device/status",
+    "/api/history",
+    "/api/settings"
+  ]
+}
