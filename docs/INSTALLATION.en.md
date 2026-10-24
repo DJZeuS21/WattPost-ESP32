@@ -1,87 +1,141 @@
-# How to install WattPost on an ESP32
+# How to Install WattPost on ESP32
 
 [← Main page](../README.en.md) · [Українська](INSTALLATION.md) · **English**
 
-This guide is for anyone who has never used an ESP32 before. No soldering is needed: the ESP32 reads the JK BMS over Bluetooth.
+This guide is written for users who have never flashed an ESP32 or microcontrollers before. The entire setup is code-free and solder-free: the ESP32 communicates with your JK BMS purely wirelessly over Bluetooth Low Energy.
 
-## 1. What you'll need
+---
 
-- An **ESP32-WROOM-32D DevKit**, or a compatible classic ESP32 development board with **4 MB flash** and a USB port. A bare module without USB is less suitable for beginners.
-- A battery with a compatible **JK BMS** supporting **Bluetooth Low Energy (BLE)**.
-- A **USB data cable** (some cables only charge).
-- A Windows, Linux, or macOS computer for the first installation.
-- A **2.4 GHz Wi-Fi** network.
+## 1. What You Need
 
-You can power the ESP32 from a normal USB charger. No wires between the ESP32 and the battery or BMS are needed.
+- **ESP32 Development Board**  
+  A classic **ESP32-WROOM-32** or **ESP32-WROOM-32D DevKit** with **4 MB Flash memory** and an onboard USB port (Micro-USB or Type-C).  
+  *Incompatible: bare modules without USB, or boards using different chips (ESP32-C3, ESP32-S3, etc. — currently a classic ESP32 is required).*
+- **Battery Pack with a Compatible JK BMS**  
+  Any modern JK BMS (JK-B1A..., JK-B2A..., JK-BD... series) equipped with **Bluetooth LE**.
+- **USB Data Cable**  
+  *Crucial: cheap charge-only cables do not carry USB data lines and your computer will not detect the board.*
+- **Computer** running Windows, Linux, or macOS.
+- **2.4 GHz Home Wi-Fi Network** (ESP32 hardware supports 802.11 b/g/n 2.4 GHz; 5 GHz Wi-Fi networks are not supported by the chip).
 
-## 2. Download the firmware
+The ESP32 is powered from any standard 5V USB phone charger or power adapter (1A or higher). Connecting the ESP32 directly to the high-voltage battery terminals is **strictly prohibited**.
 
-Open [GitHub Releases](https://github.com/DJZeuS21/WattPost-ESP32/releases) and download **`WattPost-ESP32-full.bin`** for a classic ESP32 with 4 MB flash.
+---
 
-This is a single installation image containing the bootloader, partition table, and WattPost firmware. You do not need to download or flash four separate files.
+## 2. Download the Firmware Binary
 
-**This procedure is for the first installation on a new board.** If your ESP32 already runs WattPost and has settings or history, use its built-in OTA update instead. Don't write the full set of images without a backup and a plan to preserve data.
+Navigate to the **[GitHub Releases](https://github.com/DJZeuS21/WattPost-ESP32/releases)** section and download:
 
-## 3. Connect the ESP32 over USB
+👉 **`WattPost-ESP32-full.bin`**
 
-Connect the board to your computer and find its serial port:
+This is a single merged image designed for the initial USB installation: it already bundles the bootloader, partition table, initial OTA data, and the WattPost firmware. You do not need to download multiple binary files or calculate flash address offsets.
 
-- **Windows:** Device Manager → Ports (COM & LPT), for example `COM4`.
-- **Linux:** usually `/dev/ttyUSB0` or `/dev/ttyACM0`.
-- **macOS:** usually `/dev/cu.usbserial-…` or `/dev/cu.SLAB_USBtoUART`.
+> [!NOTE]
+> This merged binary is intended for the **initial installation on a new board**. Once WattPost is installed, future firmware updates are performed wirelessly and securely via Over-The-Air (OTA) updates right from the web interface, without needing a USB cable.
 
-If no port appears, try another USB cable first. Some boards need a USB-to-serial driver such as CP210x or CH340, depending on the board.
+---
 
-## 4. Flash the firmware over USB
+## 3. Connect the ESP32 to Your Computer
 
-We'll use **esptool**, Espressif's official flashing utility. You don't need Arduino IDE or programming experience.
+Plug the ESP32 into your computer via USB and identify the virtual COM port:
 
-1. Install [Python](https://www.python.org/downloads/) if necessary.
-2. Open a terminal or command prompt **inside the folder containing the downloaded BIN file**.
-3. Install esptool:
+- **Windows**: Right-click the Start menu → **Device Manager** → expand **Ports (COM & LPT)**. Look for an entry such as `Silicon Labs CP210x USB to UART Bridge (COM3)` or `USB-SERIAL CH340 (COM4)`. Note down the port name (e.g. `COM3` or `COM4`).
+- **Linux**: Open a terminal and run `ls /dev/ttyUSB* /dev/ttyACM*`. The board usually appears as `/dev/ttyUSB0` or `/dev/ttyACM0`.
+- **macOS**: The port will appear as `/dev/cu.usbserial-...` or `/dev/cu.SLAB_USBtoUART`.
 
+> [!TIP]
+> If your computer does not react when plugged in or shows an unknown device, install the driver for the USB-to-UART chip on your board:
+> - For **CP2102 / CP2104**: [official Silicon Labs CP210x VCP driver](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
+> - For **CH340 / CH341**: [official WCH CH340 driver](https://www.wch-ic.com/downloads/CH341SER_ZIP.html)
+
+---
+
+## 4. Flash Firmware via USB
+
+We use Espressif's official, open-source command-line tool **`esptool`**.
+
+1. Ensure [Python](https://www.python.org/downloads/) (version 3.8 or newer) is installed on your computer. During Windows installation, check the box **"Add python.exe to PATH"**.
+2. Open a terminal (Command Prompt, PowerShell, or bash) and navigate to the directory where you downloaded `WattPost-ESP32-full.bin`.
+3. Install `esptool`:
    ```bash
-   python -m pip install esptool
+   pip install esptool
    ```
-
-4. Run the command below. Replace **PORT** with your ESP32 serial port, such as `COM4` or `/dev/ttyUSB0`:
-
+4. Flash the binary. Replace `PORT` with your board's serial port (e.g. `COM4` on Windows or `/dev/ttyUSB0` on Linux):
    ```bash
    python -m esptool --chip esp32 --port PORT --baud 460800 write-flash --flash-mode dio --flash-freq 40m --flash-size 4MB 0x0 WattPost-ESP32-full.bin
    ```
+   *(On Linux or macOS, use `python3` instead of `python`).*
 
-   If `python` isn't available, use `py` on Windows or `python3` on Linux/macOS.
+5. **Flash address `0x0`**: Because `WattPost-ESP32-full.bin` is a complete full-flash image, it is written starting at the very beginning of the flash memory (`0x0`).
+6. Wait 20–30 seconds until the terminal displays **"Hash of data verified. Leaving... Staying in bootloader"**.
+7. Press the **EN** (or **RESET**) button on your ESP32 board to restart it in normal run mode.
 
-5. Wait for the successful completion message. Press **EN/RESET** if the board doesn't restart automatically.
+> [!TIP]
+> If `esptool` reports "A fatal error occurred: Failed to connect to ESP32: No serial data received":
+> 1. Lower the baud rate from `460800` to `115200` (using `--baud 115200`).
+> 2. On certain dev boards, when `Connecting.....` appears, press and hold the hardware **BOOT** button on the board for 2–3 seconds until writing begins, then release it.
 
-**Use the `0x0` address for the merged `full.bin` image.** Different offsets are only needed for individual components generated by a developer's ESP-IDF build.
+---
 
-If esptool can't connect, try changing `460800` to `115200`. Some boards require holding **BOOT** as the connection starts and releasing it once connected.
+## 5. First Setup: Wi-Fi and JK BMS
 
-Don't run `erase-flash`: erasing the entire flash removes stored data.
+On first boot, the ESP32 broadcasts its own Wi-Fi access point for guided setup from your phone or laptop.
 
-Official reference: [Espressif — Flashing Firmware](https://docs.espressif.com/projects/esptool/en/latest/esp32/esptool/flashing-firmware.html).
+![WattPost First Setup Wizard](screenshots/first-setup.png)
+*WattPost setup wizard screen (First Setup)*
 
-## 5. Set up Wi-Fi and JK BMS
+1. Open the Wi-Fi settings on your phone or laptop.
+2. Find and connect to the network named **`WattPost-XXXX`** (where XXXX is unique to your board).
+3. Enter the default setup password: **`12345678`**.
+4. Most smartphones will automatically open the captive portal login screen. If it does not open automatically, navigate to:  
+   👉 **http://192.168.4.1/**
+5. Click **"Get Started"**:
+   - **Step 1 — Wi-Fi**: Select your 2.4 GHz home Wi-Fi network from the list (or click "Scan"), enter the network password, and click "Connect". The ESP32 verifies the connection and obtains an IP address on your home LAN.
+   - **Step 2 — JK BMS**: The wizard will scan for nearby Bluetooth devices. Select your JK BMS from the list and confirm.
+6. Click **"Finish"**. The ESP32 saves the settings, disables the temporary setup AP, and switches to normal operating mode.
 
-On first boot, the ESP32 opens its own Wi-Fi network for setup:
+> [!IMPORTANT]
+> **Important JK BMS Bluetooth Limitation:**  
+> Most JK BMS units can only maintain **one active Bluetooth connection at a time**. If the official JK BMS mobile application is currently connected to the battery on your phone, disconnect and close the app. Otherwise, the BMS will appear busy and the ESP32 will not be able to connect.
 
-1. On your phone or computer, find **`WattPost-XXXX`** (the last characters vary between boards).
-2. Connect to it. The initial setup-network password in the current firmware is **`12345678`**.
-3. If the setup wizard doesn't open automatically, visit **http://192.168.4.1/**.
-4. Select your home Wi-Fi, enter its password, and wait for confirmation.
-5. The wizard offers to find your **JK BMS** over Bluetooth. Select the correct BMS and wait for readings. If it's unavailable, you can finish Wi-Fi setup and add the BMS later.
-6. Reconnect to your home Wi-Fi and open **http://bms.local/**. If the name doesn't work, use the ESP32's IP address from the setup wizard or your router.
+---
 
-That's it: live readings and history work **locally, without an account or internet connection**. You can optionally link the device to [WattPost Cloud](https://wattpost.pp.ua) for remote monitoring.
+## 6. Accessing Local Monitoring (http://bms.local/)
 
-## Troubleshooting
+Once setup is complete, reconnect your phone or computer to your normal home Wi-Fi and visit:
 
-- **Computer can't detect ESP32:** check the USB data cable, USB port, and USB-to-serial driver.
-- **Flashing error:** double-check PORT and the full firmware file, reduce the baud rate, or try BOOT during connection.
-- **No WattPost-XXXX network:** check USB power and that flashing completed.
-- **Phone says “No internet”:** that's normal on the setup network. Stay connected and visit `192.168.4.1`.
-- **bms.local doesn't load:** check you're on the same home network or use the ESP32's IP address.
-- **JK BMS isn't found:** check its Bluetooth, distance, and whether another device is holding the connection.
+🌐 **http://bms.local/**
 
-WattPost displays monitoring data only. **Don't connect the ESP32 to the battery's power terminals:** the BMS is responsible for battery protection.
+You will see the WattPost live dashboard displaying your battery's state in real time!
+
+### What if bms.local does not load?
+The `bms.local` hostname uses mDNS (Bonjour / Avahi). Modern Apple devices, Linux, Windows 10/11, and modern Android versions resolve it out of the box.  
+If your router or device fails to resolve mDNS names:
+1. Locate the IP address assigned by your router to the ESP32 (displayed on the final step of the setup wizard, or visible in your router's DHCP client list under device name `wattpost`).
+2. Open the interface directly using its IP address: for example, **`http://192.168.1.120/`**.
+3. We recommend binding a static IP address to the ESP32's MAC address in your router DHCP settings for convenience.
+
+---
+
+## 7. Connecting to WattPost Cloud (Optional)
+
+If you would like to monitor your battery from outside your home network:
+1. Register a free account at **[wattpost.pp.ua](https://wattpost.pp.ua)**.
+2. In the WattPost local web interface, navigate to the "Settings" tab → "WattPost Cloud" section.
+3. Click "Pair Device" and follow the on-screen instructions.
+
+WattPost Cloud allows viewing multiple batteries from different locations in one unified dashboard and enables automated, verified Over-The-Air (OTA) updates.
+
+---
+
+## 8. Troubleshooting
+
+| Symptom | Probable Cause | Recommended Action |
+|---|---|---|
+| Computer does not detect ESP32 port | Charge-only USB cable or missing driver | Test with another data-capable USB cable; install CP2102 or CH340 driver. |
+| esptool connection error | Board did not enter bootloader mode | Hold the BOOT button while connecting starts; lower baud rate to 115200. |
+| No WattPost-XXXX Wi-Fi network appears | Insufficient power or flashing incomplete | Ensure stable 5V 1A+ USB power; press the EN/RESET button on the board. |
+| Phone displays "No internet connection" on WattPost-XXXX | Normal behavior for an isolated setup AP | Keep the connection active; temporarily disable mobile cellular data while setting up. |
+| JK BMS is not discovered during scan | BMS is connected to another phone or out of range | Close the JK app on any phone; bring ESP32 within 5–10 m (15–30 ft) of the battery. |
+| bms.local does not open | Client lacks mDNS support or is on guest Wi-Fi | Ensure you are on the same 2.4 GHz subnet; open using direct IP (e.g. `http://192.168.1.50/`). |
+| Telemetry shows "Waiting for BMS" | Battery switched off or BMS went to sleep | Verify battery power switch; ensure no mobile phone holds an active BLE session to the BMS. |

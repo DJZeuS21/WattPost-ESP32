@@ -2,68 +2,149 @@
 
 [Українська](README.md) · **English**
 
-WattPost is firmware for the ESP32 that connects to a JK BMS over Bluetooth and displays information about your battery in a regular web browser.
+**WattPost** is ESP32 firmware that wirelessly connects to a **JK BMS** over Bluetooth Low Energy (BLE) and serves a modern, responsive battery monitoring interface directly in any web browser.
 
-The ESP32 reads the state of charge, voltage, current, temperature, and individual cell data from the BMS. The web interface shows live readings, battery history, and information about BMS settings.
+Designed for DIY battery builders, home solar energy storage systems, and backup power (UPS) setups using LiFePO4, NMC, or LTO batteries with JK BMS. WattPost frees you from needing to stand near the battery with the JK mobile app open — your battery energy state is accessible from any smartphone, tablet, or PC on your local network.
 
-## How it works
+---
 
-1. The JK BMS monitors your battery and provides data over Bluetooth Low Energy (BLE).
-2. The ESP32 running WattPost reads that data and stores a local history.
-3. You open WattPost in a browser on your Wi-Fi network to see the battery's readings.
+## WattPost Interface
 
-## Local access
+![WattPost Main Dashboard](docs/screenshots/dashboard.png)
+*WattPost main monitoring screen (Dashboard). Rendered from the authentic web interface running safe 16S LiFePO4 demonstration telemetry.*
 
-The ESP32 connects to your Wi-Fi network and opens its web interface at **http://bms.local/** (or at the device's IP address).
+---
 
-- You can view live readings and battery history from a phone or computer on the same network.
-- Local monitoring doesn't require an account, a separate server, or an internet connection.
-- If WattPost Cloud is unavailable, the ESP32 continues reading the BMS and recording history.
+## Key Features
 
-## Cloud access
+- **Real-Time Energy Dashboard**  
+  Live energy flow animation (charging, discharging, or idle states), State of Charge (SOC %), total battery pack voltage, current, and active power in Watts. Interactive cell voltage bars with automatic highlight of the highest and lowest cells, active balancing indicator, and cell delta (spread in millivolts).
 
-If you'd like to check your battery when you're away, you can connect the ESP32 to **[WattPost Cloud](https://wattpost.pp.ua)** for free.
+- **14-Day On-Device History**  
+  The ESP32 logs data directly to its internal Flash memory without requiring an SD card or external server. Interactive charts for voltage, current, power, temperatures, and cell spread allow you to zoom in and analyze charge/discharge cycles. History is preserved across device reboots.
 
-- After signing up, you can view your battery's readings over the internet, even when you're away from home.
-- One account can have multiple ESP32 devices — for example, at home, in an office, or at another location.
-- Cloud access is optional. The local web interface works without it.
+- **JK BMS Settings Inspector**  
+  Clean, structured read-only display of configured JK BMS parameters: overvoltage and undervoltage protection (OVP/UVP), active balancing start threshold and balance current, charge/discharge overcurrent limits, temperature cutoff thresholds, smart sleep timer, and BMS hardware/software versions.
 
-## Firmware updates
+- **Mobile-First Responsive Design**  
+  The interface is crafted mobile-first: equally smooth and legible on a handheld smartphone or a large desktop monitor.
 
-WattPost is still being developed. New firmware versions may include bug fixes and improvements.
+---
 
-- If the ESP32 is connected to WattPost Cloud and automatic updates are enabled, it checks for newly published versions and installs them over the internet (OTA).
-- You don't need to connect the ESP32 to a computer for these updates.
-- You can turn off automatic updates and install available versions manually instead.
-- Before installation, the ESP32 verifies the firmware's integrity and digital signature.
+## How It Works
 
-## Installation
+```
+┌─────────────────┐       Bluetooth LE       ┌─────────────────┐        Wi-Fi (mDNS)        ┌─────────────────┐
+│     Battery     │ ──────────────────────> │      ESP32      │ ─────────────────────────> │    Any Web      │
+│   with JK BMS   │   (air-gapped wireless, │ running WattPost│    http://bms.local/       │    Browser      │
+│                 │     zero wires)         │    firmware     │   (or device IP address)   │  (Phone/PC)     │
+└─────────────────┘                         └─────────────────┘                            └─────────────────┘
+```
 
-New to ESP32? Follow the **[step-by-step installation guide](docs/INSTALLATION.en.md)** to choose a board, flash the firmware over USB, set up Wi-Fi, and connect your JK BMS.
+1. **JK BMS** continuously monitors battery cells and broadcasts telemetry over Bluetooth Low Energy (BLE).
+2. **ESP32** running WattPost firmware connects wirelessly to the BMS, parses telemetry frames, and records local history. No wires or soldering between the ESP32 and the battery pack are required, ensuring galvanic safety.
+3. **Local Web Interface** is served on your local Wi-Fi. Simply open a browser and inspect everything happening with your battery pack.
 
-## Source code
+---
 
-The firmware and local web interface source live in [`esp32_monitor/`](esp32_monitor/). You can build them with ESP-IDF 5.5.5. The WattPost Cloud server is not part of this repository.
+## Local Access vs Cloud
 
-## License and permitted use
+| Feature | Local Mode (WattPost Local) | Cloud Access (WattPost Cloud) |
+|---|---|---|
+| **Access URL** | `http://bms.local/` or local IP | [wattpost.pp.ua](https://wattpost.pp.ua) |
+| **Account / Sign-up** | **Not required** | Free account |
+| **Internet Connection**| **Not required** (works offline) | Required for remote viewing |
+| **Privacy** | 100% of telemetry stays on your LAN | Synchronized to secure Cloud storage |
+| **Remote Access** | Local Wi-Fi network only | Anywhere in the world over the internet |
+| **Multiple Batteries** | Accessed per ESP32 device | Multi-device fleet view in one dashboard |
+| **Firmware Updates** | Supported with internet access | Automated verified OTA updates |
 
-WattPost can be used **free of charge at home, in a shop, office, or
-within a business** to monitor the user's own batteries. You may study,
-modify and share the firmware and its source free of charge.
+> [!NOTE]
+> The local web interface is fully functional and completely autonomous. Connecting to WattPost Cloud is **entirely optional**. If the Cloud or internet connection is unavailable, the ESP32 continues reading BMS metrics and recording history locally.
 
-**Selling WattPost is not permitted**: you may not resell the firmware or
-charge for a product or service whose value derives substantially from
-WattPost functionality (including paid devices preloaded with WattPost).
-Commercial distribution requires separate permission from the rightsholder.
+---
 
-Terms: [Apache 2.0 + Commons Clause](LICENSE). This is a **source-available**
-license, not OSI-defined Open Source. Third-party libraries retain their
-own terms: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+## Interface Gallery
 
-## What you need
+<p align="center">
+  <b>14-Day History & Analytics</b><br>
+  <img src="docs/screenshots/history.png" alt="WattPost History charts" width="800">
+</p>
 
-- An ESP32-WROOM-32D or compatible classic ESP32 with 4 MB of flash.
-- A battery with a supported **JK BMS** and Bluetooth LE.
-- A Wi-Fi network to access the web interface.
+<p align="center">
+  <b>JK BMS Settings Inspection</b><br>
+  <img src="docs/screenshots/bms-settings.png" alt="WattPost BMS Settings view" width="800">
+</p>
 
-WattPost is a monitoring tool. It does not replace the BMS or its built-in battery protection.
+<table align="center">
+  <tr>
+    <td align="center"><b>Mobile Dashboard</b></td>
+    <td align="center"><b>First Setup Wizard</b></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top">
+      <img src="docs/screenshots/dashboard-mobile.png" alt="Mobile Dashboard view" width="340">
+    </td>
+    <td align="center" valign="top">
+      <img src="docs/screenshots/first-setup.png" alt="First Setup wizard" width="460">
+    </td>
+  </tr>
+</table>
+
+*All screenshots are captured from the genuine V20.0.1 web interface using safe demonstration telemetry (DEMO telemetry).*
+
+---
+
+## Hardware Requirements
+
+1. **ESP32 Development Board** — Classic ESP32 (ESP32-WROOM-32 / ESP32-WROOM-32D DevKit) with **4 MB Flash** and a USB port. Powered from a standard 5V USB phone charger or power supply.
+2. **Battery pack with a supported JK BMS** that has Bluetooth LE capability.
+3. **2.4 GHz Wi-Fi network** to access the web interface.
+
+> [!WARNING]
+> WattPost is strictly a telemetry and monitoring system. It does not replace the hardware protection functions of the JK BMS itself. Never connect ESP32 GPIO pins directly to the high-voltage battery terminals!
+
+---
+
+## Quick Installation
+
+New to ESP32? Follow our **[step-by-step beginner installation guide](docs/INSTALLATION.en.md)**.
+
+1. Download the ready-to-flash image **`WattPost-ESP32-full.bin`** from [GitHub Releases](https://github.com/DJZeuS21/WattPost-ESP32/releases).
+2. Connect your ESP32 to your computer using a USB data cable.
+3. Flash the single image using `esptool` at offset **`0x0`**:
+   ```bash
+   python -m esptool --chip esp32 --port PORT --baud 460800 write-flash --flash-mode dio --flash-freq 40m --flash-size 4MB 0x0 WattPost-ESP32-full.bin
+   ```
+4. Connect your phone to the initial setup Wi-Fi network **`WattPost-XXXX`** (password: `12345678`), open **http://192.168.4.1/** in a browser, and select your home Wi-Fi and JK BMS.
+5. Reconnect to your home Wi-Fi and open **http://bms.local/**.
+
+---
+
+## Firmware Updates (OTA)
+
+- **Security & Integrity**: WattPost supports Over-The-Air (OTA) updates. Every official release is digitally signed by the maintainer. The ESP32 cryptographically verifies the signature before applying any new firmware binary.
+- **Rollback Protection**: Dual OTA partitions ensure fault tolerance. If newly flashed firmware fails to boot or validate, the bootloader automatically reverts to the previous working partition.
+- **No USB Required After Setup**: Once flashed initially via USB, all future official firmware updates can be installed wirelessly.
+
+---
+
+## Source Code & Local Build
+
+The firmware and local web interface source code are located in [`esp32_monitor/`](esp32_monitor/).
+- Built using the official **ESP-IDF 5.5.5** toolchain.
+- Build instructions are available in [`esp32_monitor/README.md`](esp32_monitor/README.md).
+- The WattPost Cloud backend is a proprietary service and is not part of this repository.
+- Verification checksums and build provenance for the official release binary are documented in [Release Provenance](docs/RELEASE_PROVENANCE.md).
+
+---
+
+## License & Permitted Use
+
+WattPost is distributed under the **[Apache 2.0 with Commons Clause](LICENSE)** license.
+
+This is a **source-available** license, not OSI-defined Open Source:
+- **Free for Personal and Internal Business Use**: You are free to use WattPost at home, in an office, shop, or within any business to monitor your own batteries; study and modify the source code; and share it free of charge.
+- **Selling WattPost is Prohibited**: You may not resell the firmware, sell WattPost as a paid product or service, or sell pre-flashed commercial hardware based on WattPost without a separate commercial agreement from the rightsholder.
+
+Third-party libraries and components retain their respective original licenses (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
