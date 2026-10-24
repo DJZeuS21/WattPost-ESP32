@@ -8,12 +8,12 @@ This guide is written for users who have never flashed an ESP32 or microcontroll
 
 ## 1. What You Need
 
-- **ESP32 Development Board**  
-  A classic **ESP32-WROOM-32** or **ESP32-WROOM-32D DevKit** with **4 MB Flash memory** and an onboard USB port (Micro-USB or Type-C).  
+- **ESP32 Development Board**
+  A classic **ESP32-WROOM-32** or **ESP32-WROOM-32D DevKit** with **4 MB Flash memory** and an onboard USB port (Micro-USB or Type-C).
   *Incompatible: bare modules without USB, or boards using different chips (ESP32-C3, ESP32-S3, etc. — currently a classic ESP32 is required).*
-- **Battery Pack with a Compatible JK BMS**  
-  Any modern JK BMS (JK-B1A..., JK-B2A..., JK-BD... series) equipped with **Bluetooth LE**.
-- **USB Data Cable**  
+- **Battery Pack with a Compatible JK BMS**
+  A compatible JK BMS with **Bluetooth LE**. Compatibility depends on the model and protocol version; Bluetooth alone does not guarantee support.
+- **USB Data Cable**
   *Crucial: cheap charge-only cables do not carry USB data lines and your computer will not detect the board.*
 - **Computer** running Windows, Linux, or macOS.
 - **2.4 GHz Home Wi-Fi Network** (ESP32 hardware supports 802.11 b/g/n 2.4 GHz; 5 GHz Wi-Fi networks are not supported by the chip).
@@ -67,7 +67,7 @@ We use Espressif's official, open-source command-line tool **`esptool`**.
    *(On Linux or macOS, use `python3` instead of `python`).*
 
 5. **Flash address `0x0`**: Because `WattPost-ESP32-full.bin` is a complete full-flash image, it is written starting at the very beginning of the flash memory (`0x0`).
-6. Wait 20–30 seconds until the terminal displays **"Hash of data verified. Leaving... Staying in bootloader"**.
+6. Wait for esptool to confirm that writing and verification succeeded. The time depends on the USB port and baud rate.
 7. Press the **EN** (or **RESET**) button on your ESP32 board to restart it in normal run mode.
 
 > [!TIP]
@@ -87,15 +87,15 @@ On first boot, the ESP32 broadcasts its own Wi-Fi access point for guided setup 
 1. Open the Wi-Fi settings on your phone or laptop.
 2. Find and connect to the network named **`WattPost-XXXX`** (where XXXX is unique to your board).
 3. Enter the default setup password: **`12345678`**.
-4. Most smartphones will automatically open the captive portal login screen. If it does not open automatically, navigate to:  
+4. Some phones will automatically open the captive portal setup screen. If it does not open automatically, navigate to:
    👉 **http://192.168.4.1/**
 5. Click **"Get Started"**:
    - **Step 1 — Wi-Fi**: Select your 2.4 GHz home Wi-Fi network from the list (or click "Scan"), enter the network password, and click "Connect". The ESP32 verifies the connection and obtains an IP address on your home LAN.
-   - **Step 2 — JK BMS**: The wizard will scan for nearby Bluetooth devices. Select your JK BMS from the list and confirm.
+   - **Step 2 — JK BMS**: The wizard lets you scan for a JK BMS. If your BMS is not available yet, you can finish Wi-Fi setup and select the BMS later from the local interface.
 6. Click **"Finish"**. The ESP32 saves the settings, disables the temporary setup AP, and switches to normal operating mode.
 
 > [!IMPORTANT]
-> **Important JK BMS Bluetooth Limitation:**  
+> **Important JK BMS Bluetooth Limitation:**
 > Most JK BMS units can only maintain **one active Bluetooth connection at a time**. If the official JK BMS mobile application is currently connected to the battery on your phone, disconnect and close the app. Otherwise, the BMS will appear busy and the ESP32 will not be able to connect.
 
 ---
@@ -109,9 +109,9 @@ Once setup is complete, reconnect your phone or computer to your normal home Wi-
 You will see the WattPost live dashboard displaying your battery's state in real time!
 
 ### What if bms.local does not load?
-The `bms.local` hostname uses mDNS (Bonjour / Avahi). Modern Apple devices, Linux, Windows 10/11, and modern Android versions resolve it out of the box.  
+The `bms.local` hostname uses mDNS (Bonjour / Avahi). mDNS support depends on the device and network settings; it may not work everywhere.
 If your router or device fails to resolve mDNS names:
-1. Locate the IP address assigned by your router to the ESP32 (displayed on the final step of the setup wizard, or visible in your router's DHCP client list under device name `wattpost`).
+1. Locate the IP address assigned by your router to the ESP32 (displayed on the final step of the setup wizard, or visible in your router's DHCP client list (the device name may differ)).
 2. Open the interface directly using its IP address: for example, **`http://192.168.1.120/`**.
 3. We recommend binding a static IP address to the ESP32's MAC address in your router DHCP settings for convenience.
 
@@ -137,5 +137,5 @@ WattPost Cloud allows viewing multiple batteries from different locations in one
 | No WattPost-XXXX Wi-Fi network appears | Insufficient power or flashing incomplete | Ensure stable 5V 1A+ USB power; press the EN/RESET button on the board. |
 | Phone displays "No internet connection" on WattPost-XXXX | Normal behavior for an isolated setup AP | Keep the connection active; temporarily disable mobile cellular data while setting up. |
 | JK BMS is not discovered during scan | BMS is connected to another phone or out of range | Close the JK app on any phone; bring ESP32 within 5–10 m (15–30 ft) of the battery. |
-| bms.local does not open | Client lacks mDNS support or is on guest Wi-Fi | Ensure you are on the same 2.4 GHz subnet; open using direct IP (e.g. `http://192.168.1.50/`). |
+| bms.local does not open | Client lacks mDNS support or is on guest Wi-Fi | Ensure your phone or computer is on the same local network as ESP32; open using direct IP (e.g. `http://192.168.1.50/`). |
 | Telemetry shows "Waiting for BMS" | Battery switched off or BMS went to sleep | Verify battery power switch; ensure no mobile phone holds an active BLE session to the BMS. |
