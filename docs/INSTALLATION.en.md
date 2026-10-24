@@ -4,8 +4,6 @@
 
 This guide is for anyone who has never used an ESP32 before. No soldering is needed: the ESP32 reads the JK BMS over Bluetooth.
 
-> **Important:** ready-to-flash firmware files are not yet available in [Releases](https://github.com/DJZeuS21/WattPost-ESP32/releases). The instructions below explain how installation will work once the first package is published. Don't flash random BIN files from the internet.
-
 ## 1. What you'll need
 
 - An **ESP32-WROOM-32D DevKit**, or a compatible classic ESP32 development board with **4 MB flash** and a USB port. A bare module without USB is less suitable for beginners.
@@ -18,7 +16,7 @@ You can power the ESP32 from a normal USB charger. No wires between the ESP32 an
 
 ## 2. Download the firmware
 
-When the first release becomes available, open [GitHub Releases](https://github.com/DJZeuS21/WattPost-ESP32/releases) and download the package **for a classic ESP32 with 4 MB flash**.
+Open [GitHub Releases](https://github.com/DJZeuS21/WattPost-ESP32/releases) and download the firmware package **for a classic ESP32 with 4 MB flash**.
 
 The current WattPost build uses these four files:
 
@@ -29,7 +27,7 @@ The current WattPost build uses these four files:
 | `ota_data_initial.bin` | `0xF000` |
 | `wattpost_mini.bin` | `0x20000` |
 
-Extract everything into one folder, **keeping the directory structure**. If a future release provides an easier installer, follow that release's instructions.
+Extract everything into one folder, **keeping the directory structure**.
 
 **This procedure is for the first installation on a new board.** If your ESP32 already runs WattPost and has settings or history, use its built-in OTA update instead. Don't write the full set of images without a backup and a plan to preserve data.
 
