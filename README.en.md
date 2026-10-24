@@ -37,6 +37,10 @@ WattPost is still being developed. New firmware versions may include bug fixes a
 - You can turn off automatic updates and install available versions manually instead.
 - Before installation, the ESP32 verifies the firmware's integrity and digital signature.
 
+## Installation
+
+New to ESP32? Follow the **[step-by-step installation guide](docs/INSTALLATION.en.md)** to choose a board, flash the firmware over USB, set up Wi-Fi, and connect your JK BMS.
+
 ## What you need
 
 - An ESP32-WROOM-32D or compatible classic ESP32 with 4 MB of flash.
