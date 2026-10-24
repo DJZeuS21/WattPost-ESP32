@@ -9,7 +9,7 @@ This guide is written for users who have never flashed an ESP32 or microcontroll
 ## 1. What You Need
 
 - **ESP32 Development Board**
-  A classic **ESP32-WROOM-32** or **ESP32-WROOM-32D DevKit** with **4 MB Flash memory** and an onboard USB port (Micro-USB or Type-C).
+  A classic **ESP32** board (for example, an **ESP32-WROOM-32** or **ESP32-WROOM-32D DevKit**) with **at least 4 MB Flash memory** and an onboard USB port (Micro-USB or Type-C). The current image and `--flash-size 4MB` setting use only the first 4 MB; extra Flash capacity is not used. Specific 8/16 MB boards have not yet been tested.
   *Incompatible: bare modules without USB, or boards using different chips (ESP32-C3, ESP32-S3, etc. — currently a classic ESP32 is required).*
 - **Battery Pack with a Compatible JK BMS**
   A compatible JK BMS with **Bluetooth LE**. Compatibility depends on the model and protocol version; Bluetooth alone does not guarantee support.

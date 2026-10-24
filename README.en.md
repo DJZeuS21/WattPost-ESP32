@@ -32,7 +32,7 @@ Local monitoring and history work without an account or internet connection. Opt
 
 ## What You Need
 
-- **Classic ESP32 with 4 MB Flash:** for example, an ESP32-WROOM-32 / ESP32-WROOM-32D DevKit with USB. You also need a USB data cable and a standard 5 V USB power supply. This build does not target ESP32-C3 or ESP32-S3 boards.
+- **Classic ESP32 with at least 4 MB Flash:** for example, an ESP32-WROOM-32 / ESP32-WROOM-32D DevKit with USB. You also need a USB data cable and a standard 5 V USB power supply. This build uses only the first 4 MB of Flash; specific boards with 8/16 MB have not yet been tested. ESP32-C3 and ESP32-S3 require separate builds and are not currently supported.
 - **Battery with a compatible JK BMS and Bluetooth LE.** Bluetooth alone does not guarantee compatibility; the model and protocol matter. The screenshots are illustrative and do not constitute a list of tested models.
 - **2.4 GHz Wi-Fi** and a computer for the initial USB installation.
 
