@@ -24,14 +24,6 @@ EOF
   *) echo "Unknown argument: $1" >&2; exit 2 ;;
 esac
 
-if [[ ! -f "$PROJECT_ROOT/secrets.local" ]]; then
-  echo "Stage 1 acceptance: missing local secrets.local; build cannot proceed." >&2
-  exit 2
-fi
-if [[ ! -r "$PROJECT_ROOT/secrets.local" ]]; then
-  echo "Stage 1 acceptance: secrets.local is not readable by the build user; preserving existing build artifacts." >&2
-  exit 2
-fi
 if [[ ! -f "$IDF_ENV" || ! -f "$REPO_ROOT/.local-tools/esp-idf/export.sh" ]]; then
   echo "Stage 1 acceptance: project-local ESP-IDF missing; run ./tools/setup-esp32-env.sh." >&2
   exit 2

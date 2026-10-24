@@ -35,32 +35,6 @@ if(WATTPOST_GIT_STATUS)
     string(APPEND WATTPOST_BUILD_ID "-dirty")
 endif()
 
-set(SECRET_FILE "${CMAKE_CURRENT_LIST_DIR}/secrets.local")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${SECRET_FILE}")
-set(OTA_TOKEN_VAL "")
-
-if(EXISTS "${SECRET_FILE}")
-    file(STRINGS "${SECRET_FILE}" SECRET_LINES)
-    foreach(LINE ${SECRET_LINES})
-        string(STRIP "${LINE}" LINE_STRIPPED)
-        if(LINE_STRIPPED MATCHES "^WATTPOST_OTA_TOKEN=(.+)$")
-            string(SUBSTRING "${LINE_STRIPPED}" 19 -1 VAL)
-            string(STRIP "${VAL}" VAL)
-            string(REPLACE "\"" "" VAL "${VAL}")
-            string(REPLACE "'" "" VAL "${VAL}")
-            set(OTA_TOKEN_VAL "${VAL}")
-        endif()
-    endforeach()
-endif()
-
-if(NOT OTA_TOKEN_VAL)
-    message(FATAL_ERROR "OTA Token not configured! Create secrets.local with WATTPOST_OTA_TOKEN=<secret>")
-endif()
-
-file(WRITE "${CMAKE_BINARY_DIR}/wattpost_secrets.h"
-    "#pragma once\n#define WATTPOST_OTA_TOKEN \"${OTA_TOKEN_VAL}\"\n"
-)
-
 file(WRITE "${CMAKE_BINARY_DIR}/wattpost_build.h"
     "#pragma once\n"
     "#define WATTPOST_FIRMWARE_VERSION \"${WATTPOST_VERSION}\"\n"

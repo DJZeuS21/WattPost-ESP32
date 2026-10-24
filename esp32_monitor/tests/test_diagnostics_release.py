@@ -1,4 +1,3 @@
-import re
 import unittest
 from pathlib import Path
 
@@ -32,7 +31,7 @@ class DiagnosticsReleaseTest(unittest.TestCase):
         ):
             self.assertIn(expected, text)
 
-    def test_runtime_diagnostics_and_protected_raw_dump_are_wired(self):
+    def test_runtime_diagnostics_remain_without_raw_dump_route(self):
         source = (ROOT / "main/main.c").read_text()
         for expected in (
             'nvs_open("diagnostics", NVS_READWRITE',
@@ -40,24 +39,17 @@ class DiagnosticsReleaseTest(unittest.TestCase):
             "esp_core_dump_get_panic_reason",
             "esp_core_dump_get_summary",
             '"/api/diagnostics"',
-            '"/api/diagnostics/coredump"',
             "esp_get_minimum_free_heap_size()",
         ):
             self.assertIn(expected, source)
-        self.assertIn(r'\"jk_bms_poll_stack_free_min_bytes\"', source)
+        self.assertIn("jk_bms_poll_stack_free_min_bytes", source)
+        self.assertNotIn('"/api/diagnostics/coredump"', source)
+        self.assertNotIn("coredump_download_handler", source)
 
         ble_source = (ROOT / "main/jk_bms_ble.c").read_text()
         self.assertIn("#define JK_BMS_POLL_TASK_STACK_SIZE 4096u", ble_source)
         self.assertIn("&poll_task_handle", ble_source)
         self.assertIn("uxTaskGetStackHighWaterMark(task)", ble_source)
-
-        handler = re.search(
-            r"static esp_err_t coredump_download_handler\(.*?\n}\n",
-            source,
-            flags=re.S,
-        )
-        self.assertIsNotNone(handler)
-        self.assertIn("ota_authorized(request)", handler.group(0))
 
 
 if __name__ == "__main__":

@@ -129,8 +129,8 @@ class DeviceStatusHttpSourceTests(unittest.TestCase):
 
     def test_http_handler_capacity_tracks_registered_routes(self):
         registered = MAIN.count("httpd_register_uri_handler(server")
-        self.assertEqual(registered, 29)
-        self.assertIn("config.max_uri_handlers = 29;", MAIN)
+        self.assertEqual(registered, 27)
+        self.assertIn("config.max_uri_handlers = 27;", MAIN)
 
     def test_local_http_keeps_socket_budget_beside_cloud_transport(self):
         server = block("static void start_server", "static bool start_mdns")

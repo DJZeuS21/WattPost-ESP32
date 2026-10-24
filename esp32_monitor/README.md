@@ -30,14 +30,8 @@ root, install the project-local toolchain once and activate it:
 source tools/esp32-env.sh
 ~~~
 
-Create a unique **local** OTA token for your development build; it is never
-committed to Git:
-
-~~~bash
-python3 tools/generate-local-ota-token.py
-~~~
-
-Then build:
+No shared OTA token or per-device secret is required to compile the firmware.
+Build using:
 
 ~~~bash
 idf.py -C esp32_monitor build
@@ -48,9 +42,9 @@ and `flasher_args.json` in `esp32_monitor/build/`. Use the flashing arguments
 generated for this specific build; WattPost has a custom partition table
 and the application begins at `0x20000`, not at the usual demo offset.
 
-**Do not use a privately compiled binary for public distribution.** The
-current build embeds its local `WATTPOST_OTA_TOKEN`; a production-safe
-public-release credential strategy is required before publishing binaries.
+The old unauthenticated raw-image upload endpoint and raw coredump download
+endpoint are removed. Official Cloud OTA still verifies the signed release
+manifest and firmware SHA-256. The private signing key is not in this repository.
 
 Development tests (from the indicated locations):
 

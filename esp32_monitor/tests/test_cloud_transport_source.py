@@ -401,7 +401,7 @@ class CloudTransportSourceTests(unittest.TestCase):
         diagnostics = block(
             MAIN,
             "static esp_err_t diagnostics_handler",
-            "static esp_err_t coredump_download_handler",
+            "static const char *detect_restart_reason",
         )
         self.assertIn('"\\\"cloud_transport\\\":{"', diagnostics)
         for key in (

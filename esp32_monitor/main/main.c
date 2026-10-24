@@ -47,7 +47,6 @@
 #include "settings_json.h"
 #include "temperature_profiles.h"
 #include "wifi_runtime_policy.h"
-#include "wattpost_secrets.h"
 #include "wattpost_build.h"
 
 
@@ -4529,18 +4528,6 @@ static esp_err_t history_handler(httpd_req_t *request) {
                    httpd_resp_send_chunk(request, NULL, 0) == ESP_OK ? ESP_OK : ESP_FAIL;
 }
 
-static bool ota_authorized(httpd_req_t *request) {
-    const size_t expected_length = strlen(WATTPOST_OTA_TOKEN);
-    const size_t received_length = httpd_req_get_hdr_value_len(request, "X-WattPost-Token");
-    if (expected_length == 0 || expected_length >= 96 || received_length != expected_length) {
-        return false;
-    }
-    char received_token[96];
-    return httpd_req_get_hdr_value_str(request, "X-WattPost-Token", received_token,
-                                       sizeof(received_token)) == ESP_OK &&
-           strcmp(received_token, WATTPOST_OTA_TOKEN) == 0;
-}
-
 static uint32_t task_stack_free_min_bytes(TaskHandle_t task) {
     return task == NULL ? 0u : (uint32_t) uxTaskGetStackHighWaterMark(task);
 }
@@ -4675,48 +4662,6 @@ static esp_err_t diagnostics_handler(httpd_req_t *request) {
     return httpd_resp_sendstr(request, http_json_response.diagnostics);
 }
 
-static esp_err_t coredump_download_handler(httpd_req_t *request) {
-    if (!ota_authorized(request)) {
-        httpd_resp_send_err(request, HTTPD_401_UNAUTHORIZED, "Потрібен токен OTA");
-        return ESP_FAIL;
-    }
-
-    size_t address = 0;
-    size_t size = 0;
-    if (esp_core_dump_image_get(&address, &size) != ESP_OK || size == 0) {
-        httpd_resp_send_err(request, HTTPD_404_NOT_FOUND, "Core dump відсутній");
-        return ESP_FAIL;
-    }
-
-    const esp_partition_t *core = esp_partition_find_first(
-        ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_COREDUMP, "coredump");
-    if (core == NULL || address != core->address || size > core->size) {
-        httpd_resp_send_err(request, HTTPD_500_INTERNAL_SERVER_ERROR, "Core dump partition invalid");
-        return ESP_FAIL;
-    }
-
-    httpd_resp_set_type(request, "application/octet-stream");
-    httpd_resp_set_hdr(request, "Cache-Control", "no-store");
-    httpd_resp_set_hdr(request, "Content-Disposition", "attachment; filename=\"wattpost-coredump.bin\"");
-
-    uint8_t buffer[512];
-    for (size_t offset = 0; offset < size; offset += sizeof(buffer)) {
-        const size_t chunk = size - offset < sizeof(buffer) ? size - offset : sizeof(buffer);
-        if (esp_partition_read(core, offset, buffer, chunk) != ESP_OK ||
-            httpd_resp_send_chunk(request, (const char *) buffer, chunk) != ESP_OK) {
-            return ESP_FAIL;
-        }
-    }
-    return httpd_resp_send_chunk(request, NULL, 0) == ESP_OK ? ESP_OK : ESP_FAIL;
-}
-
-
-
-static void restart_after_ota(void *unused) {
-    vTaskDelay(pdMS_TO_TICKS(500));
-    esp_restart();
-}
-
 static const char *detect_restart_reason(void) {
     if (saved_restart_magic == RESTART_REASON_MAGIC) {
         const uint32_t reason = saved_restart_reason;
@@ -4747,59 +4692,6 @@ static void recovery_restart(uint32_t reason) {
     ESP_LOGE(TAG, "Аварійне перезавантаження: %s",
              reason == RESTART_REASON_LEGACY_WIFI_TIMEOUT ? "wifi_timeout" : "bms_timeout");
     esp_restart();
-}
-
-static esp_err_t ota_handler(httpd_req_t *request) {
-    if (!ota_authorized(request)) {
-        httpd_resp_send_err(request, HTTPD_401_UNAUTHORIZED, "Потрібен токен OTA");
-        return ESP_FAIL;
-    }
-
-    const esp_partition_t *partition = esp_ota_get_next_update_partition(NULL);
-    if (partition == NULL || request->content_len <= 0 ||
-        request->content_len > partition->size) {
-        httpd_resp_send_err(request, HTTPD_400_BAD_REQUEST, "Некоректний розмір прошивки");
-        return ESP_FAIL;
-    }
-
-    esp_ota_handle_t update;
-    esp_err_t err = esp_ota_begin(partition, request->content_len, &update);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Не вдалося почати OTA: %s", esp_err_to_name(err));
-        httpd_resp_send_err(request, HTTPD_500_INTERNAL_SERVER_ERROR, "Не вдалося почати OTA");
-        return ESP_FAIL;
-    }
-
-    char buffer[1024];
-    int remaining = request->content_len;
-    while (remaining > 0) {
-        const int received = httpd_req_recv(request, buffer,
-                                            remaining < (int) sizeof(buffer) ?
-                                                remaining : sizeof(buffer));
-        if (received == HTTPD_SOCK_ERR_TIMEOUT) {
-            continue;
-        }
-        if (received <= 0 || esp_ota_write(update, buffer, received) != ESP_OK) {
-            esp_ota_abort(update);
-            httpd_resp_send_err(request, HTTPD_500_INTERNAL_SERVER_ERROR, "Помилка запису OTA");
-            return ESP_FAIL;
-        }
-        remaining -= received;
-    }
-
-    err = esp_ota_end(update);
-    if (err == ESP_OK) {
-        err = esp_ota_set_boot_partition(partition);
-    }
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Не вдалося завершити OTA: %s", esp_err_to_name(err));
-        httpd_resp_send_err(request, HTTPD_500_INTERNAL_SERVER_ERROR, "Некоректна прошивка");
-        return ESP_FAIL;
-    }
-
-    httpd_resp_sendstr(request, "{\"ok\":true,\"message\":\"Перезавантаження\"}");
-    xTaskCreate(restart_after_ota, "restart_after_ota", 2048, NULL, 5, NULL);
-    return ESP_OK;
 }
 
 static void ota_validation_task(void *unused) {
@@ -5025,7 +4917,7 @@ static void start_server(void) {
     }
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 29;
+    config.max_uri_handlers = 27;
     config.stack_size = 8192;
     config.lru_purge_enable = true;
     config.send_wait_timeout = 20;
@@ -5046,11 +4938,6 @@ static void start_server(void) {
         .uri = "/api/settings",
         .method = HTTP_GET,
         .handler = settings_handler,
-    };
-    const httpd_uri_t ota = {
-        .uri = "/api/ota",
-        .method = HTTP_POST,
-        .handler = ota_handler,
     };
     const httpd_uri_t temp_config_get = {
         .uri = "/api/config/temperature",
@@ -5167,11 +5054,6 @@ static void start_server(void) {
         .method = HTTP_GET,
         .handler = diagnostics_handler,
     };
-    const httpd_uri_t coredump_uri = {
-        .uri = "/api/diagnostics/coredump",
-        .method = HTTP_GET,
-        .handler = coredump_download_handler,
-    };
     const httpd_uri_t web = {
         .uri = "*",
         .method = HTTP_GET,
@@ -5180,7 +5062,6 @@ static void start_server(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &live));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &history));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &settings));
-    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &ota));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &temp_config_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &temp_config_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &request_token_uri));
@@ -5204,7 +5085,6 @@ static void start_server(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &system_reboot_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &system_factory_reset_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &diagnostics_uri));
-    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &coredump_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &web));
 
     ESP_LOGI(TAG, "Веб-сервер запущено");
