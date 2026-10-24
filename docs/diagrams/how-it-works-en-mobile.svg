@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 656" width="440" height="656" role="img" aria-labelledby="diagramTitle">
+<title id="diagramTitle">How WattPost works: JK BMS — Bluetooth LE — ESP32 — Wi-Fi — browser</title>
+<rect x="1" y="1" width="438" height="654" rx="20" fill="#0d1117" stroke="#303b4a" stroke-width="2"/>
+<rect x="23" y="25" width="394" height="156" rx="17" fill="#171f2b" stroke="#39475a" stroke-width="1.5"/>
+<rect x="46" y="49" width="5" height="24" rx="2.5" fill="#54d28a"/>
+<text x="63" y="69" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#b6c3d4" text-anchor="start">01 · DATA SOURCE</text>
+<text x="47" y="123" font-family="DejaVu Sans,Arial,sans-serif" font-size="25" font-weight="700" fill="#f4f7fb" text-anchor="start">Battery with JK BMS</text>
+<rect x="23" y="250" width="394" height="156" rx="17" fill="#171f2b" stroke="#39475a" stroke-width="1.5"/>
+<rect x="46" y="274" width="5" height="24" rx="2.5" fill="#76b8ff"/>
+<text x="63" y="294" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#b6c3d4" text-anchor="start">02 · LOCAL MONITOR</text>
+<text x="47" y="348" font-family="DejaVu Sans,Arial,sans-serif" font-size="25" font-weight="700" fill="#f4f7fb" text-anchor="start">ESP32 · WattPost</text>
+<text x="47" y="382" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" font-weight="400" fill="#c4d0df" text-anchor="start">History and web interface</text>
+<rect x="23" y="475" width="394" height="156" rx="17" fill="#171f2b" stroke="#39475a" stroke-width="1.5"/>
+<rect x="46" y="499" width="5" height="24" rx="2.5" fill="#a7a5ff"/>
+<text x="63" y="519" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#b6c3d4" text-anchor="start">03 · VIEW</text>
+<text x="47" y="573" font-family="DejaVu Sans,Arial,sans-serif" font-size="25" font-weight="700" fill="#f4f7fb" text-anchor="start">Browser</text>
+<text x="47" y="607" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" font-weight="400" fill="#c4d0df" text-anchor="start">Phone or PC</text>
+<path d="M 220 186 V 238" stroke="#54d28a" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M 212 231 L 220 244 L 228 231 Z" fill="#54d28a"/>
+<text x="245" y="217" font-family="DejaVu Sans,Arial,sans-serif" font-size="16" font-weight="600" fill="#c4d0df" text-anchor="start">Bluetooth LE</text>
+<path d="M 220 411 V 463" stroke="#76b8ff" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M 212 456 L 220 469 L 228 456 Z" fill="#76b8ff"/>
+<text x="245" y="442" font-family="DejaVu Sans,Arial,sans-serif" font-size="16" font-weight="600" fill="#c4d0df" text-anchor="start">Wi-Fi</text>
+</svg>

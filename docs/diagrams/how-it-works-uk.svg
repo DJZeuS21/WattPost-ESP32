@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 284" width="1200" height="284" role="img" aria-labelledby="diagramTitle">
+<title id="diagramTitle">Як працює WattPost: JK BMS — Bluetooth LE — ESP32 — Wi-Fi — браузер</title>
+<rect x="1" y="1" width="1198" height="282" rx="20" fill="#0d1117" stroke="#303b4a" stroke-width="2"/>
+<rect x="30" y="61" width="300" height="162" rx="15" fill="#171f2b" stroke="#39475a" stroke-width="1.5"/>
+<rect x="50" y="80" width="5" height="21" rx="2" fill="#54d28a"/>
+<text x="65" y="97" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#b6c3d4" text-anchor="start">01 · ДЖЕРЕЛО ДАНИХ</text>
+<text x="52" y="151" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="700" fill="#f4f7fb" text-anchor="start">Акумулятор</text>
+<text x="52" y="190" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" font-weight="400" fill="#c4d0df" text-anchor="start">JK BMS</text>
+<rect x="450" y="61" width="300" height="162" rx="15" fill="#171f2b" stroke="#39475a" stroke-width="1.5"/>
+<rect x="470" y="80" width="5" height="21" rx="2" fill="#76b8ff"/>
+<text x="485" y="97" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#b6c3d4" text-anchor="start">02 · ЛОКАЛЬНИЙ МОНІТОР</text>
+<text x="472" y="151" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="700" fill="#f4f7fb" text-anchor="start">ESP32 · WattPost</text>
+<text x="472" y="190" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" font-weight="400" fill="#c4d0df" text-anchor="start">Історія та вебінтерфейс</text>
+<rect x="870" y="61" width="300" height="162" rx="15" fill="#171f2b" stroke="#39475a" stroke-width="1.5"/>
+<rect x="890" y="80" width="5" height="21" rx="2" fill="#a7a5ff"/>
+<text x="905" y="97" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#b6c3d4" text-anchor="start">03 · ПЕРЕГЛЯД</text>
+<text x="892" y="151" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="700" fill="#f4f7fb" text-anchor="start">Браузер</text>
+<text x="892" y="190" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" font-weight="400" fill="#c4d0df" text-anchor="start">Телефон або комп’ютер</text>
+<text x="390.0" y="119" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#c4d0df" text-anchor="middle">Bluetooth LE</text>
+<path d="M 334 164 H 435" stroke="#54d28a" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M 430 156 L 443 164 L 430 172 Z" fill="#54d28a"/>
+<text x="810.0" y="119" font-family="DejaVu Sans,Arial,sans-serif" font-size="15" font-weight="600" fill="#c4d0df" text-anchor="middle">Wi-Fi</text>
+<path d="M 754 164 H 855" stroke="#76b8ff" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M 850 156 L 863 164 L 850 172 Z" fill="#76b8ff"/>
+</svg>

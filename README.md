@@ -33,11 +33,10 @@
 
 ## Як це працює
 
-```mermaid
-flowchart LR
-    BMS["Акумулятор із JK BMS"] -->|Bluetooth LE| ESP["ESP32 із WattPost"]
-    ESP -->|Wi-Fi| WEB["Браузер на телефоні або ПК"]
-```
+<picture>
+  <source media="(max-width: 640px)" srcset="docs/diagrams/how-it-works-uk-mobile.svg">
+  <img src="docs/diagrams/how-it-works-uk.svg" alt="Як працює WattPost: JK BMS — Bluetooth LE — ESP32 — Wi-Fi — браузер" width="1200">
+</picture>
 
 1. **JK BMS** постійно контролює стан батареї та надає телеметрію підключеному пристрою через Bluetooth Low Energy (BLE).
 2. **ESP32** з прошивкою WattPost підключається до BMS по повітрю, обробляє пакети даних і записує історію. Для отримання телеметрії ESP32 не потрібно підключати проводами до силових клем акумулятора.
@@ -48,7 +47,7 @@ flowchart LR
 ## Локальний доступ vs Хмара
 
 | Параметр | Локальний режим (WattPost Local) | Хмарний доступ (WattPost Cloud) |
-|---|---|---|
+|:---:|:---:|:---:|
 | **Адреса** | `http://bms.local/` або локальна IP | [wattpost.pp.ua](https://wattpost.pp.ua) |
 | **Реєстрація** | **Не потрібна** | Потрібен безкоштовний акаунт |
 | **Інтернет** | **Не потрібен** (працює автономно) | Потрібен для віддаленого перегляду |
