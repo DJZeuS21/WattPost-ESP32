@@ -33,17 +33,15 @@ Designed for DIY battery builders, home solar energy storage systems, and backup
 
 ## How It Works
 
-```
-┌─────────────────┐       Bluetooth LE       ┌─────────────────┐        Wi-Fi (mDNS)        ┌─────────────────┐
-│     Battery     │ ──────────────────────> │      ESP32      │ ─────────────────────────> │    Any Web      │
-│   with JK BMS   │   (no signal wires, │ running WattPost│    http://bms.local/       │    Browser      │
-│                 │     zero wires)         │    firmware     │   (or device IP address)   │  (Phone/PC)     │
-└─────────────────┘                         └─────────────────┘                            └─────────────────┘
+```mermaid
+flowchart LR
+    BMS["Battery with JK BMS"] -->|Bluetooth LE| ESP["ESP32 running WattPost"]
+    ESP -->|Wi-Fi| WEB["Browser on phone or PC"]
 ```
 
 1. **JK BMS** continuously monitors battery cells and provides telemetry to a connected device over Bluetooth Low Energy (BLE).
 2. **ESP32** running WattPost firmware connects wirelessly to the BMS, parses telemetry frames, and records local history. ESP32 does not need a wired connection to the battery terminals to read BMS telemetry.
-3. **Local Web Interface** is served on your local Wi-Fi. Simply open a browser and inspect everything happening with your battery pack.
+3. **Local Web Interface** is available from a phone or computer on the same network at `http://bms.local/` (or the ESP32 IP address).
 
 ---
 
