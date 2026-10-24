@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Legacy cache guards (real control comes from ?v= on assets, set by build) -->
+  <meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta name="app-version" content="__WATTPOST_WEB_VERSION__" />
+  <title>WattPost — Battery Energy Monitoring</title>
+  <meta name="description" content="High-fidelity real-time BMS battery energy flow and health monitoring interface" />
+  <link rel="icon" id="app-favicon" href="assets/logo.svg?v=__WATTPOST_WEB_VERSION__" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css?v=__WATTPOST_WEB_VERSION__" />
+</head>
+<body>
+
+  <!-- Grid background -->
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- Ambient background spots -->
+  <div class="bg-ambient" aria-hidden="true">
+    <div class="bg-spot bg-spot-primary" id="bg-spot-primary"></div>
+    <div class="bg-spot bg-spot-secondary"></div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header">
+    <a class="brand" id="brand-home-link" href="#dashboard" title="До панелі" aria-label="WattPost — до панелі">
+      <img id="brand-logo" class="brand-logo" alt="" width="22" height="22" src="assets/logo.svg?v=__WATTPOST_WEB_VERSION__" data-logo-canonical="assets/logo.svg?v=__WATTPOST_WEB_VERSION__" aria-hidden="true" />
+      <span class="brand-name">WattPost</span>
+    </a>
+    <nav class="tabs">
+      <button class="tab-btn" data-tab="dashboard" id="tab-dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="10" width="8" height="11" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/></svg>
+        <span class="tab-label">Панель</span>
+      </button>
+      <button class="tab-btn" data-tab="history" id="tab-history">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 6"/><path d="M3 21h18"/></svg>
+        <span class="tab-label">Історія</span>
+      </button>
+      <button class="tab-btn" data-tab="settings" id="tab-settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        <span class="tab-label">Налаштування</span>
+      </button>
+    </nav>
+    <div class="header-actions">
+      <div id="runtime-context-actions" class="runtime-context-actions" hidden></div>
+      <button class="tab-btn bms-settings-btn" data-tab="bms-settings" id="tab-bms-settings" title="Налаштування BMS" aria-label="Налаштування BMS">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.16.36.37.7.6 1 .28.3.66.48 1.1.5h.1v4h-.1c-.44.02-.82.2-1.1.5-.23.3-.44.64-.6 1z"></path>
+        </svg>
+        <span class="tab-label">BMS</span>
+      </button>
+      <div class="bms-online" id="bms-online">
+        <span class="bms-dot"></span>
+        Очікуємо дані BMS
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div id="runtime-status-banner" class="runtime-status-banner" role="status" aria-live="polite" hidden></div>
+
+    <!-- ====================== DASHBOARD ====================== -->
+    <div class="view view-dashboard" id="view-dashboard">
+      <h1 class="visually-hidden">Моніторинг батареї</h1>
+
+      <!-- HERO: Energy flow + Battery -->
+      <section class="hero-card" id="hero-card" data-hero-state="idle">
+        <div class="hero-bg-glow hero-bg-glow-charge" aria-hidden="true"></div>
+        <div class="hero-bg-glow hero-bg-glow-discharge" aria-hidden="true"></div>
+        <div class="hero-ambient-glow" id="hero-ambient-glow"></div>
+
+        <svg id="energy-flow-svg" class="energy-flow-svg" viewBox="0 0 1200 440" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <!-- Glow filters -->
+            <filter id="glow-in" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="glow-soft" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="12" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="glow-halo-near" filterUnits="userSpaceOnUse" x="-400" y="-300" width="2000" height="1000">
+              <feGaussianBlur stdDeviation="16" />
+            </filter>
+            <filter id="glow-halo-wide" filterUnits="userSpaceOnUse" x="-400" y="-300" width="2000" height="1000">
+              <feGaussianBlur stdDeviation="38" />
+            </filter>
+
+            <!-- Glow gradients for halo paths -->
+            <linearGradient id="glow-grad-charge" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#56d364" stop-opacity="0" />
+              <stop offset="8%" stop-color="#56d364" stop-opacity="0.75" />
+              <stop offset="30%" stop-color="#56d364" stop-opacity="1" />
+              <stop offset="42%" stop-color="#56d364" stop-opacity="0.35" />
+              <stop offset="48%" stop-color="#56d364" stop-opacity="0" />
+              <stop offset="100%" stop-color="#56d364" stop-opacity="0" />
+            </linearGradient>
+            <linearGradient id="glow-grad-discharge" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#9d8dff" stop-opacity="0" />
+              <stop offset="52%" stop-color="#9d8dff" stop-opacity="0" />
+              <stop offset="58%" stop-color="#9d8dff" stop-opacity="0.35" />
+              <stop offset="70%" stop-color="#9d8dff" stop-opacity="1" />
+              <stop offset="92%" stop-color="#9d8dff" stop-opacity="0.75" />
+              <stop offset="100%" stop-color="#9d8dff" stop-opacity="0" />
+            </linearGradient>
+
+            <!-- Liquid color gradients (these are set dynamically by JS) -->
+            <linearGradient id="grad-charge" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#1a7f37" /><stop offset="50%" stop-color="#2ea043" /><stop offset="100%" stop-color="#56d364" />
+            </linearGradient>
+            <linearGradient id="grad-discharge" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#6e40c9" /><stop offset="50%" stop-color="#8957e5" /><stop offset="100%" stop-color="#b083f0" />
+            </linearGradient>
+            <linearGradient id="grad-idle" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#30363d" /><stop offset="100%" stop-color="#484f58" />
+            </linearGradient>
+
+            <!-- Watt underglow gradients & filters -->
+            <linearGradient id="underglow-grad-charge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#56d364" stop-opacity="0" />
+              <stop offset="25%" stop-color="#56d364" stop-opacity="0.35" />
+              <stop offset="50%" stop-color="#56d364" stop-opacity="0.85" />
+              <stop offset="75%" stop-color="#56d364" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#56d364" stop-opacity="0" />
+            </linearGradient>
+            <linearGradient id="underglow-grad-discharge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#9d8dff" stop-opacity="0" />
+              <stop offset="25%" stop-color="#9d8dff" stop-opacity="0.35" />
+              <stop offset="50%" stop-color="#9d8dff" stop-opacity="0.85" />
+              <stop offset="75%" stop-color="#9d8dff" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#9d8dff" stop-opacity="0" />
+            </linearGradient>
+            <filter id="underglow-halo-blur" x="-50%" y="-300%" width="200%" height="700%">
+              <feGaussianBlur stdDeviation="6 2.5" />
+            </filter>
+            <filter id="watt-active-glow-charge" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#56d364" flood-opacity="0.25" />
+            </filter>
+            <filter id="watt-active-glow-discharge" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#9d8dff" flood-opacity="0.25" />
+            </filter>
+            <!-- Materialization smooth bloom filters (dynamically interpolated during incoming RAF) -->
+            <filter id="watt-mat-glow-charge" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur id="watt-mat-glow-charge-blur" stdDeviation="0" />
+              <feDropShadow id="watt-mat-glow-charge-shadow" dx="0" dy="0" stdDeviation="3" flood-color="#56d364" flood-opacity="0.25" />
+            </filter>
+            <filter id="watt-mat-glow-discharge" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur id="watt-mat-glow-discharge-blur" stdDeviation="0" />
+              <feDropShadow id="watt-mat-glow-discharge-shadow" dx="0" dy="0" stdDeviation="3" flood-color="#9d8dff" flood-opacity="0.25" />
+            </filter>
+
+            <linearGradient id="grad-soc-liquid" x1="0" y1="1" x2="0" y2="0">
+              <stop id="grad-soc-stop-0" offset="0%" stop-color="#1a7f37" style="transition: stop-color 0.4s ease;" />
+              <stop id="grad-soc-stop-50" offset="50%" stop-color="#2ea043" style="transition: stop-color 0.4s ease;" />
+              <stop id="grad-soc-stop-100" offset="100%" stop-color="#56d364" style="transition: stop-color 0.4s ease;" />
+            </linearGradient>
+
+            <clipPath id="batt-clip"><rect x="536" y="148" width="128" height="210" rx="8" /></clipPath>
+            <clipPath id="liquid-level-clip"><rect id="liquid-level-clip-rect" x="536" y="208" width="128" height="155" /></clipPath>
+            <clipPath id="clip-charge-left"><rect x="0" y="0" width="570" height="500" /></clipPath>
+            <clipPath id="clip-discharge-right"><rect x="630" y="0" width="570" height="500" /></clipPath>
+
+            <linearGradient id="batt-glass" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08" />
+              <stop offset="40%" stop-color="#ffffff" stop-opacity="0.02" />
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+            </linearGradient>
+
+            <!-- Flow edge-fade and directional reveal mask -->
+            <linearGradient id="flow-edge-fade" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop id="flow-mask-stop-0" offset="0%" stop-color="#000000" />
+              <stop id="flow-mask-stop-1" offset="3.5%" stop-color="#ffffff" />
+              <stop id="flow-mask-stop-2" offset="96.5%" stop-color="#ffffff" />
+              <stop id="flow-mask-stop-3" offset="96.5%" stop-color="#ffffff" />
+              <stop id="flow-mask-stop-4" offset="100%" stop-color="#000000" />
+            </linearGradient>
+            <mask id="flow-alpha-mask" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" x="-5%" y="-100%" width="110%" height="300%">
+              <rect x="0" y="-1" width="1" height="3" fill="url(#flow-edge-fade)" />
+            </mask>
+          </defs>
+
+          <g id="flow-layout" class="hero-layout-slot">
+          <!-- Ambient halation group (toggled by JS based on state, synchronized with directional reveal mask) -->
+          <g id="halo-group" mask="url(#flow-alpha-mask)">
+            <path id="halo-wide"
+                  d="M 0 263 C 186 86, 336 95, 530 222 C 570 250, 630 195, 670 222 C 864 350, 1014 345, 1200 177"
+                  fill="none"
+                  stroke="url(#glow-grad-charge)"
+                  stroke-width="48"
+                  stroke-linecap="round"
+                  filter="url(#glow-halo-wide)" />
+            <path id="halo-near"
+                  d="M 0 263 C 186 86, 336 95, 530 222 C 570 250, 630 195, 670 222 C 864 350, 1014 345, 1200 177"
+                  fill="none"
+                  stroke="url(#glow-grad-charge)"
+                  stroke-width="18"
+                  stroke-linecap="round"
+                  filter="url(#glow-halo-near)" />
+          </g>
+
+          <!-- Static background track (always visible base rail, independent from active flow mask) -->
+          <path id="flow-base-track"
+                d="M 0 263 C 186 86, 336 95, 530 222 C 570 250, 630 195, 670 222 C 864 350, 1014 345, 1200 177"
+                fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="3" stroke-linecap="round" />
+
+          <!-- Active flow group with directional SVG reveal mask -->
+          <g mask="url(#flow-alpha-mask)">
+            <path id="flow-glow"
+                  d="M 0 263 C 186 86, 336 95, 530 222 C 570 250, 630 195, 670 222 C 864 350, 1014 345, 1200 177"
+                  fill="none" stroke="#56d364" stroke-width="6" stroke-linecap="round" filter="url(#glow-soft)"
+                  style="stroke-dasharray: 15 25;" clip-path="url(#clip-charge-left)" />
+            <path id="flow-main"
+                  d="M 0 263 C 186 86, 336 95, 530 222 C 570 250, 630 195, 670 222 C 864 350, 1014 345, 1200 177"
+                  fill="none" stroke="#56d364" stroke-width="2" stroke-linecap="round" filter="url(#glow-in)"
+                  style="stroke-dasharray: 15 25;" clip-path="url(#clip-charge-left)" />
+            <path id="flow-static"
+                  d="M 0 263 C 186 86, 336 95, 530 222 C 570 250, 630 195, 670 222 C 864 350, 1014 345, 1200 177"
+                  fill="none" stroke="#56d364" stroke-width="1" stroke-linecap="round"
+                  clip-path="url(#clip-charge-left)" />
+          </g>
+
+          </g>
+
+          <!-- INPUT (Charge) source -->
+          <g id="input-layout" class="hero-layout-slot">
+          <g id="input-group">
+            <circle id="input-circle" cx="276" cy="180" r="22" fill="#161b22" stroke="#30363d" stroke-width="1.5" />
+            <g id="input-icon" transform="translate(276, 180)" fill="#484f58" stroke="none">
+              <path d="M 2,-12 L -5,-1 L -0.5,-1 L -2,12 L 5,1 L 0.5,1 Z" />
+            </g>
+            <text id="input-label" x="276" y="228" text-anchor="middle" fill="#8b949e"
+                  style="font-size:14px;font-weight:600;">Заряджання</text>
+            <text id="input-power" x="276" y="256" text-anchor="middle" dominant-baseline="middle" fill="#484f58"
+                  style="font-size:32px;font-weight:800;font-family:monospace;font-variant-numeric:tabular-nums;"><tspan class="watt-number">0</tspan><tspan class="watt-unit" dx="3" font-size="24" font-weight="700">W</tspan></text>
+            <g id="input-underglow" class="hero-watt-underglow" style="opacity: 0; pointer-events: none;">
+              <rect id="input-underglow-halo" x="236" y="271.5" width="80" height="3" rx="1.5"
+                    fill="url(#underglow-grad-charge)" filter="url(#underglow-halo-blur)" opacity="0.32" />
+              <rect id="input-underglow-core" x="248" y="272.25" width="56" height="1.2" rx="0.6"
+                    fill="url(#underglow-grad-charge)" opacity="0.85" />
+            </g>
+            <text id="input-current" class="hero-current-value" x="276" y="289" text-anchor="middle"></text>
+          </g>
+          </g>
+
+          <!-- OUTPUT (Discharge) load -->
+          <g id="output-layout" class="hero-layout-slot">
+          <g id="output-group">
+            <circle id="output-circle" cx="916" cy="184" r="22" fill="#161b22" stroke="#30363d" stroke-width="1.5" />
+            <g id="output-icon" transform="translate(916, 184)" fill="none" stroke="#484f58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="0" cy="-4" r="8" />
+              <line x1="-4" y1="6" x2="4" y2="6" />
+              <line x1="-3" y1="9" x2="3" y2="9" />
+              <path d="M -1.5,11 L 0,14 L 1.5,11" />
+            </g>
+            <text id="output-label" x="916" y="233" text-anchor="middle" fill="#8b949e"
+                  style="font-size:14px;font-weight:600;">Навантаження</text>
+            <text id="output-power" x="916" y="261" text-anchor="middle" dominant-baseline="middle" fill="#484f58"
+                  style="font-size:32px;font-weight:800;font-family:monospace;font-variant-numeric:tabular-nums;"><tspan class="watt-number">0</tspan><tspan class="watt-unit" dx="3" font-size="24" font-weight="700">W</tspan></text>
+            <g id="output-underglow" class="hero-watt-underglow" style="opacity: 0; pointer-events: none;">
+              <rect id="output-underglow-halo" x="876" y="276.5" width="80" height="3" rx="1.5"
+                    fill="url(#underglow-grad-discharge)" filter="url(#underglow-halo-blur)" opacity="0.32" />
+              <rect id="output-underglow-core" x="888" y="277.25" width="56" height="1.2" rx="0.6"
+                    fill="url(#underglow-grad-discharge)" opacity="0.85" />
+            </g>
+            <text id="output-current" class="hero-current-value" x="916" y="294" text-anchor="middle"></text>
+          </g>
+          </g>
+
+          <!-- BATTERY -->
+          <g id="battery-layout" class="hero-layout-slot">
+          <g id="battery-group">
+            <rect id="battery-pulse" x="530" y="140" width="140" height="220" rx="12" fill="none" stroke="#56d364" stroke-width="1"
+                  style="filter: drop-shadow(0 0 20px rgba(86,211,100,0.45));" />
+            <rect x="575" y="128" width="50" height="14" rx="5" fill="#21262d" stroke="#30363d" stroke-width="1" />
+            <rect x="530" y="140" width="140" height="220" rx="12" fill="#0d1117" stroke="#30363d" stroke-width="1.5" />
+            <rect x="536" y="148" width="128" height="210" rx="8" fill="#161b22" />
+
+            <g clip-path="url(#batt-clip)">
+              <!-- Liquid fill -->
+              <rect id="liquid-fill" x="536" y="208" width="128" height="155" fill="url(#grad-soc-liquid)" />
+
+              <!-- Wave layers -->
+              <g id="wave-layer-3" transform="translate(536, 208)">
+                <g class="wave-breathe-3">
+                  <g class="wave-flow-3">
+                    <path id="wave-c-path"
+                          d="M 0 0 C 20 2.2, 34 -2.2, 56 0 C 76 2.2, 90 -2.2, 112 0 C 132 2.2, 146 -2.2, 168 0 C 188 2.2, 202 -2.2, 224 0 C 244 2.2, 258 -2.2, 280 0 C 300 2.2, 314 -2.2, 336 0 C 356 2.2, 370 -2.2, 392 0 C 412 2.2, 426 -2.2, 448 0 C 468 2.2, 482 -2.2, 504 0 C 524 2.2, 538 -2.2, 560 0 V 800 H 0 Z"
+                          fill="#56d364" opacity="0.2" />
+                  </g>
+                </g>
+              </g>
+              <g id="wave-layer-2" transform="translate(536, 208)">
+                <g class="wave-breathe-2">
+                  <g class="wave-flow-2">
+                    <path id="wave-b-path"
+                          d="M 0 0 C 16 3.6, 54 3.6, 72 0 C 90 -4.25, 126 -4.25, 144 0 C 160 3.6, 198 3.6, 216 0 C 234 -4.25, 270 -4.25, 288 0 C 304 3.6, 342 3.6, 360 0 C 378 -4.25, 414 -4.25, 432 0 C 448 3.6, 486 3.6, 504 0 C 522 -4.25, 558 -4.25, 576 0 V 800 H 0 Z"
+                          fill="#56d364" opacity="0.36" />
+                  </g>
+                </g>
+              </g>
+              <g id="wave-layer-1" transform="translate(536, 208)">
+                <g class="wave-breathe-1">
+                  <g class="wave-flow-1">
+                    <path id="wave-a-fill"
+                          d="M 0 0 C 20 -5.5, 64 -5.5, 96 0.5 C 122 4.6, 164 3.2, 192 0 C 212 -5.5, 256 -5.5, 288 0.5 C 314 4.6, 356 3.2, 384 0 C 404 -5.5, 448 -5.5, 480 0.5 C 506 4.6, 548 3.2, 576 0 V 800 H 0 Z"
+                          fill="url(#grad-soc-liquid)" />
+                    <path id="wave-a-stroke"
+                          d="M 0 0 C 20 -5.5, 64 -5.5, 96 0.5 C 122 4.6, 164 3.2, 192 0 C 212 -5.5, 256 -5.5, 288 0.5 C 314 4.6, 356 3.2, 384 0 C 404 -5.5, 448 -5.5, 480 0.5 C 506 4.6, 548 3.2, 576 0"
+                          fill="none" stroke="#56d364" stroke-width="1.3" stroke-opacity="0.55"
+                          style="filter: drop-shadow(0 0 3px rgba(86,211,100,0.45));" />
+                  </g>
+                </g>
+              </g>
+
+              <!-- Bubbles -->
+              <g id="bubble-group" clip-path="url(#liquid-level-clip)"></g>
+
+              <!-- Glass overlay -->
+              <rect x="536" y="148" width="128" height="210" fill="url(#batt-glass)" pointer-events="none" />
+            </g>
+
+            <text id="battery-soc" x="600" y="255" text-anchor="middle" dominant-baseline="central" fill="#e6edf3"
+                  style="font-size:48px;font-weight:800;font-family:monospace;letter-spacing:-0.03em;">
+              72<tspan dx="2" dy="-10" fill="rgba(230,237,243,0.72)"
+                       style="font-size:22px;font-weight:700;font-family:monospace;letter-spacing:normal;">%</tspan>
+            </text>
+          </g>
+          </g>
+
+          <!-- Central ETA Indicator (Centered Solid Energized Capsule) -->
+          <g id="eta-layout" class="hero-layout-slot">
+          <g id="hero-directional-eta" class="hero-directional-eta collapsed is-idle" data-capsule-color="neutral" data-capsule-phase="idle">
+            <!-- One shape morphs from a circle into a pill; CSS sizes it around the readable text. -->
+            <rect id="hero-eta-shape" class="hero-eta-shape" x="591" y="377" width="18" height="18" rx="9" />
+            <!-- ETA text inside capsule (neutral light text, centered, soft fade-in during unfold) -->
+            <text id="hero-eta-text" x="600" y="386" text-anchor="middle" dominant-baseline="central"
+                  class="hero-eta-text"></text>
+          </g>
+          </g>
+        </svg>
+      </section>
+
+      <!-- METRICS -->
+      <div class="metrics-grid" id="metrics-grid">
+        <div class="metric-card" data-metric="voltage">
+          <div class="metric-accent-line"></div>
+          <div class="metric-head">
+            <div class="metric-icon">V</div>
+            <span class="metric-label">Напруга</span>
+          </div>
+          <div class="metric-value">
+            <span class="metric-value-num">—</span>
+            <small class="metric-value-unit">V</small>
+          </div>
+        </div>
+        <div class="metric-card" data-metric="remaining">
+          <div class="metric-accent-line"></div>
+          <div class="metric-head">
+            <div class="metric-icon">Ah</div>
+            <span class="metric-label">Залишок</span>
+          </div>
+          <div class="metric-value">
+            <span class="metric-value-num">—</span>
+            <small class="metric-value-unit">Ah</small>
+          </div>
+        </div>
+        <div class="metric-card" data-metric="temperature">
+          <div class="metric-accent-line"></div>
+          <div class="metric-head">
+            <div class="metric-icon">T</div>
+            <span class="metric-label">Температура</span>
+          </div>
+          <div class="metric-value">
+            <span class="metric-value-num">—</span>
+            <small class="metric-value-unit">°C</small>
+          </div>
+        </div>
+        <div class="metric-card" data-metric="spread">
+          <div class="metric-accent-line"></div>
+          <div class="metric-head">
+            <div class="metric-icon">dV</div>
+            <span class="metric-label">Розкид комірок</span>
+          </div>
+          <div class="metric-value">
+            <span class="metric-value-num">—</span>
+            <small class="metric-value-unit">mV</small>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ENERGY PANELS -->
+      <div class="panels-stack">
+        <!-- CHARGING PANEL -->
+        <section class="energy-panel charging-panel" id="charging-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#56d364" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2,-12 L-5,-1 L-0.5,-1 L-2,12 L5,1 L0.5,1 Z" transform="translate(12,12)" fill="#56d364" stroke="none" />
+              </svg>
+              Заряджання
+            </h2>
+            <span class="panel-subtext">останні 24 год</span>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-stats">
+              <div class="energy-block" style="border-left: 3px solid #56d364;">
+                <span class="energy-label">Отримано батареєю</span>
+                <strong class="energy-value"><span id="charge-energy">0.0</span><small class="energy-unit">kWh</small></strong>
+              </div>
+              <div class="panel-stat-grid">
+                <div class="stat-block">
+                  <span class="stat-label">Середня потужність</span>
+                  <strong class="stat-value" id="charge-avg">—</strong>
+                </div>
+                <div class="stat-block">
+                  <span class="stat-label">Пікова потужність</span>
+                  <strong class="stat-value" id="charge-peak">—</strong>
+                </div>
+                <div class="stat-block">
+                  <span class="stat-label">Час заряджання</span>
+                  <strong class="stat-value" id="charge-time">—</strong>
+                </div>
+              </div>
+              <div class="yesterday-row">
+                <span class="yesterday-label">Вчора</span>
+                <strong class="yesterday-value" id="charge-yesterday">—</strong>
+              </div>
+            </div>
+            <div class="panel-chart-wrap">
+              <div class="chart-wrapper">
+                <button class="chart-reset-btn" data-chart="charge" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                <canvas id="charge-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DISCHARGING PANEL -->
+        <section class="energy-panel discharging-panel" id="discharging-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9d8dff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="6" /><line x1="8" y1="15" x2="16" y2="15" /><line x1="9" y1="18" x2="15" y2="18" /><path d="M10.5,20 L12,22 L13.5,20" />
+              </svg>
+              Розряджання
+            </h2>
+            <span class="panel-subtext">останні 24 год</span>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-stats">
+              <div class="energy-block" style="border-left: 3px solid #9d8dff;">
+                <span class="energy-label">Віддано батареєю</span>
+                <strong class="energy-value"><span id="discharge-energy">0.0</span><small class="energy-unit">kWh</small></strong>
+              </div>
+              <div class="panel-stat-grid">
+                <div class="stat-block">
+                  <span class="stat-label">Середня потужність</span>
+                  <strong class="stat-value" id="discharge-avg">—</strong>
+                </div>
+                <div class="stat-block">
+                  <span class="stat-label">Пікова потужність</span>
+                  <strong class="stat-value" id="discharge-peak">—</strong>
+                </div>
+                <div class="stat-block">
+                  <span class="stat-label">Час розряджання</span>
+                  <strong class="stat-value" id="discharge-time">—</strong>
+                </div>
+              </div>
+              <div class="yesterday-row">
+                <span class="yesterday-label">Вчора</span>
+                <strong class="yesterday-value" id="discharge-yesterday">—</strong>
+              </div>
+            </div>
+            <div class="panel-chart-wrap">
+              <div class="chart-wrapper">
+                <button class="chart-reset-btn" data-chart="discharge" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                <canvas id="discharge-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TEMPERATURE PANEL -->
+        <section class="energy-panel temperature-panel" id="temperature-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#58A6FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+              </svg>
+              Температури
+            </h2>
+            <span class="panel-subtext">останні 24 год</span>
+          </div>
+          <div class="sensor-grid" id="sensor-grid"></div>
+          <div class="temp-chart-wrap">
+            <div class="chart-wrapper">
+              <button class="chart-reset-btn" data-chart="temperature" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+              <canvas id="temperature-chart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- CELL BALANCE PANEL -->
+        <section class="energy-panel cell-balance-panel" id="cell-balance-panel">
+          <div class="panel-head panel-head-cell">
+            <div class="cell-title-row">
+              <h2 class="panel-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e6edf3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="7" width="14" height="10" rx="1.5" /><path d="M17 10v4" /><path d="M6 9v6M10 9v6M14 9v6" />
+                </svg>
+                Баланс комірок
+              </h2>
+
+            </div>
+            <div class="spread-badge" id="spread-badge">
+              <span class="spread-dot"></span>
+              <span class="spread-text">Розкид:</span>
+              <span class="spread-value">Δ —</span>
+            </div>
+          </div>
+          <div class="cell-bars-wrap">
+            <div class="cell-bars-grid" id="cell-bars-grid"></div>
+          </div>
+          <div class="trend-section">
+            <div class="trend-head">
+              <div class="trend-title-row">
+                <span class="trend-label">Тренд розбіжності</span>
+                <span class="trend-status" id="trend-status">Норма</span>
+              </div>
+              <div class="trend-stats">
+                <div><span class="trend-stat-label">ПОТОЧНИЙ: </span><span class="trend-stat-val" id="trend-current">—</span></div>
+                <div><span class="trend-stat-label">МАКС (24г): </span><span class="trend-stat-val-2" id="trend-max">—</span></div>
+                <div class="trend-stat-hidden"><span class="trend-stat-label">СЕРЕДНІЙ: </span><span class="trend-stat-val-2" id="trend-avg">—</span></div>
+                <div class="trend-threshold-ctrl" id="trend-threshold-ctrl" title="Порогове значення розкиду для попередження (1-29 mV)">
+                  <span class="trend-stat-label">ПОРІГ: </span>
+                  <div class="threshold-stepper">
+                    <button class="stepper-btn" id="btn-spread-threshold-dec" aria-label="Зменшити поріг розкиду">−</button>
+                    <span class="stepper-val" id="spread-threshold-val">15 mV</span>
+                    <button class="stepper-btn" id="btn-spread-threshold-inc" aria-label="Збільшити поріг розкиду">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="trend-chart-wrap">
+              <div class="chart-wrapper">
+                <button class="chart-reset-btn" data-chart="trend" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                <canvas id="trend-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div> <!-- /#view-dashboard -->
+
+    <!-- ====================== HISTORY ====================== -->
+    <div class="view view-history" id="view-history">
+      <div class="history-load-bar" id="history-load-bar" aria-hidden="true"></div>
+      <div class="history-header">
+        <div class="history-header-left">
+          <div class="history-icon-badge">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="history-title">Історія роботи батареї</h1>
+            <p class="history-subtitle">Аналітика заряду, розряду, температур та балансу за період</p>
+          </div>
+        </div>
+        <div class="history-header-right">
+          <div class="period-selector" id="period-selector">
+            <button class="period-btn" data-period="today">Сьогодні</button>
+            <button class="period-btn is-active" data-period="24h">24 год</button>
+            <button class="period-btn" data-period="7d">7 днів</button>
+            <button class="period-btn" data-period="14d">14 днів</button>
+          </div>
+          <div class="history-load-chip" id="history-load-chip" hidden role="status">
+            <span class="history-load-chip-fill" id="history-load-fill" hidden aria-hidden="true"></span>
+            <svg class="history-load-spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="3" />
+              <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+            </svg>
+            <svg class="history-load-check" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="history-load-text" id="history-load-text">Завантаження…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY CARDS -->
+      <div class="summary-grid" id="summary-grid">
+        <div class="summary-card">
+          <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(86,211,100,0.4), transparent);"></div>
+          <div class="summary-head">
+            <span class="summary-label">Отримано батареєю</span>
+            <div class="summary-icon" style="background:#56d36415;color:#56d364;border:1px solid #56d36430;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2,-12 L-5,-1 L-0.5,-1 L-2,12 L5,1 L0.5,1 Z" transform="translate(12,12)" fill="#56d364" stroke="none" />
+              </svg>
+            </div>
+          </div>
+          <div class="summary-value">
+            <span class="summary-num" id="summary-energy-in">0.0</span>
+            <small class="summary-unit">kWh</small>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(157,141,255,0.4), transparent);"></div>
+          <div class="summary-head">
+            <span class="summary-label">Віддано батареєю</span>
+            <div class="summary-icon" style="background:#9d8dff15;color:#9d8dff;border:1px solid #9d8dff30;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="6" /><line x1="8" y1="15" x2="16" y2="15" /><line x1="9" y1="18" x2="15" y2="18" /><path d="M10.5,20 L12,22 L13.5,20" />
+              </svg>
+            </div>
+          </div>
+          <div class="summary-value">
+            <span class="summary-num" id="summary-energy-out">0.0</span>
+            <small class="summary-unit">kWh</small>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(88,166,255,0.4), transparent);"></div>
+          <div class="summary-head">
+            <span class="summary-label">Діапазон рівня заряду</span>
+            <div class="summary-icon" style="background:#58a6ff15;color:#58a6ff;border:1px solid #58a6ff30;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="16" height="10" rx="2" /><line x1="22" y1="11" x2="22" y2="13" />
+              </svg>
+            </div>
+          </div>
+          <div class="summary-value">
+            <span class="summary-num" id="summary-soc-range">0 – 100</span>
+            <small class="summary-unit">%</small>
+          </div>
+          <div class="soc-range-bar">
+            <div class="soc-range-spacer" id="soc-range-spacer"></div>
+            <div class="soc-range-fill" id="soc-range-fill"></div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
+          <div class="summary-head">
+            <span class="summary-label">Пікова потужність</span>
+            <div class="summary-icon summary-icon-neutral">⚡</div>
+          </div>
+          <div class="summary-peak-grid">
+            <div>
+              <span class="peak-label">ЗАРЯД</span>
+              <span class="peak-value peak-charge">+<span id="summary-peak-charge">0</span> <small>W</small></span>
+            </div>
+            <div>
+              <span class="peak-label">РОЗРЯД</span>
+              <span class="peak-value peak-discharge">-<span id="summary-peak-discharge">0</span> <small>W</small></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POWER + SOC CHARTS + MODE SPLIT -->
+      <div class="history-row-1">
+        <section class="history-card history-power-card">
+          <div class="power-card-body">
+            <div class="history-card-head">
+              <div class="history-card-title-row">
+                <div class="icon-badge icon-blue">⚡</div>
+                <h2>Потужність і рівень заряду</h2>
+              </div>
+              <div class="history-legend">
+                <span class="legend-item"><span class="legend-dot" style="background:#56d364;"></span> Заряд (W)</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#9d8dff;"></span> Розряд (W)</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#58a6ff;"></span> SoC (%)</span>
+              </div>
+            </div>
+            <div class="power-chart-section">
+              <div class="chart-axis-label">ПОТУЖНІСТЬ (W)</div>
+              <div class="power-chart-wrap">
+                <div class="chart-wrapper">
+                  <button class="chart-reset-btn" data-chart="history-power" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                  <canvas id="history-power-chart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="soc-chart-section">
+              <div class="chart-axis-label">РІВЕНЬ ЗАРЯДУ (SOC %)</div>
+              <div class="soc-chart-wrap">
+                <div class="chart-wrapper">
+                  <button class="chart-reset-btn" data-chart="history-soc" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                  <canvas id="history-soc-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="history-card history-mode-card">
+          <div class="mode-card-body">
+            <div class="mode-head">
+              <div class="icon-badge icon-green">⏱</div>
+              <h2>Режими роботи</h2>
+            </div>
+            <div class="mode-pie-wrap">
+              <canvas id="history-mode-chart"></canvas>
+              <div class="mode-pie-center">
+                <span class="mode-pie-label">ПЕРІОД</span>
+                <span class="mode-pie-value" id="mode-period-label">24 год</span>
+              </div>
+            </div>
+            <div class="mode-list" id="mode-list"></div>
+          </div>
+          <div class="mode-footer">Розподіл розраховано за струмом навантаження</div>
+        </section>
+      </div>
+
+      <!-- DETAILED METRICS + DAILY LIST -->
+      <div class="history-row-2">
+        <section class="history-card history-detail-card">
+          <div class="detail-head">
+            <div class="detail-title-row">
+              <div class="icon-badge icon-blue">📊</div>
+              <h2>Детальний аналіз метрик</h2>
+            </div>
+            <div class="metric-stats-row">
+              <div class="metric-stat-pill"><span class="metric-stat-pill-label">МІН:</span><span class="metric-stat-pill-val" id="detail-min">0</span></div>
+              <div class="metric-stat-pill"><span class="metric-stat-pill-label">СЕР:</span><span class="metric-stat-pill-val-blue" id="detail-avg">0</span></div>
+              <div class="metric-stat-pill"><span class="metric-stat-pill-label">МАКС:</span><span class="metric-stat-pill-val" id="detail-max">0</span></div>
+            </div>
+          </div>
+          <div class="metric-groups">
+            <div class="metric-group-tabs" id="metric-group-tabs">
+              <button class="group-tab is-active" data-group="electric"><span class="group-icon">⚡</span>Електрика</button>
+              <button class="group-tab" data-group="cells"><span class="group-icon">🔋</span>Комірки</button>
+              <button class="group-tab" data-group="temperature"><span class="group-icon">🌡️</span>Температури</button>
+            </div>
+            <div class="metric-pills" id="metric-pills"></div>
+          </div>
+          <div class="detail-chart-wrap">
+            <div class="chart-wrapper">
+              <button class="chart-reset-btn" data-chart="history-detail" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+              <canvas id="history-detail-chart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section class="history-card history-daily-card">
+          <div class="daily-card-body">
+            <div class="daily-head">
+              <div class="daily-title-row">
+                <div class="icon-badge icon-blue">📅</div>
+                <h2>По днях</h2>
+              </div>
+              <span class="daily-aggregation">АГРЕГАЦІЯ</span>
+            </div>
+            <div class="daily-grid daily-grid-header">
+              <span>ДЕНЬ</span>
+              <span class="daily-center">ЗАРЯД / РОЗРЯД</span>
+              <span class="daily-center">МІН. ЗАРЯД</span>
+              <span class="daily-center">МАКС. ΔV</span>
+            </div>
+            <div class="daily-list" id="daily-list"></div>
+          </div>
+          <div class="daily-footer">
+            <span id="daily-footer-text">Усі дні показано</span>
+            <span>Днів: <strong id="daily-count">0</strong></span>
+          </div>
+        </section>
+      </div>
+
+      <!-- HEATMAP -->
+      <section class="history-card history-heatmap-card">
+        <div class="heatmap-head">
+          <div class="heatmap-title-block">
+            <div class="heatmap-title-row">
+              <div class="icon-badge icon-blue">▦</div>
+              <h2>Профіль навантаження (14 днів)</h2>
+            </div>
+            <p class="heatmap-subtitle">Розподіл середньої потужності по годинах доби (00:00 — 23:00)</p>
+          </div>
+          <div class="heatmap-legend">
+            <span class="legend-text">0 W</span>
+            <div class="legend-bar" style="background: linear-gradient(to right, #161b22 0%, #15273d 15%, #1a3b61 35%, #22538a 55%, #2d6fb8 75%, #3a87db 90%, #58a6ff 100%);"></div>
+            <span class="legend-text legend-text-bold">5000 W</span>
+          </div>
+        </div>
+        <div class="heatmap-body" id="heatmap-body"></div>
+      </section>
+    </div>
+
+    <!-- ====================== WATTPOST DEVICE SETTINGS ====================== -->
+    <div class="view view-settings" id="view-settings"></div>
+
+    <!-- ====================== JK BMS SETTINGS ====================== -->
+    <div class="view view-settings view-bms-settings" id="view-bms-settings"></div>
+  </main>
+
+  <!-- App version (cache diagnostics — updated by the build script) -->
+  <div class="app-version" id="app-version">__WATTPOST_WEB_VERSION__</div>
+
+  <!-- Tooltip element -->
+  <div class="chart-tooltip" id="chart-tooltip"></div>
+
+  <!-- Scripts (loaded in dependency order) -->
+  <script src="vendor/chart.umd.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="vendor/hammer.min.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="vendor/chartjs-plugin-zoom.umd.min.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/battery-colors.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/energy-flow.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/charts.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/data-normalizer.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/history-cache.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/transport.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/api.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/device-settings.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/settings-schema.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/settings.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/dashboard.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/history.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/app.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <!-- DEV_ONLY_START -->
+  <!-- DEV_ONLY_END -->
+</body>
+</html>

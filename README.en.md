@@ -41,6 +41,10 @@ WattPost is still being developed. New firmware versions may include bug fixes a
 
 New to ESP32? Follow the **[step-by-step installation guide](docs/INSTALLATION.en.md)** to choose a board, flash the firmware over USB, set up Wi-Fi, and connect your JK BMS.
 
+## Source code
+
+The firmware and local web interface source live in [`esp32_monitor/`](esp32_monitor/). You can build them with ESP-IDF 5.5.5. The WattPost Cloud server is not part of this repository.
+
 ## What you need
 
 - An ESP32-WROOM-32D or compatible classic ESP32 with 4 MB of flash.

@@ -1,0 +1,297 @@
+{
+  "contract_version": 1,
+  "base_path": "/api/device",
+  "transport": {
+    "stage1": "local_http_only",
+    "cors": "disabled",
+    "credential_confidentiality": "not_provided_by_application_transport",
+    "notes": [
+      "Wi-Fi credentials are accepted only in JSON request bodies and are never returned.",
+      "Stage 1 assumes a trusted local network/provisioning link; remote access requires TLS in a later stage."
+    ]
+  },
+  "security_classes": {
+    "local_read": {
+      "methods": [
+        "GET"
+      ],
+      "requirements": [
+        "allowed_host",
+        "cache_no_store"
+      ]
+    },
+    "request_token": {
+      "methods": [
+        "GET"
+      ],
+      "requirements": [
+        "allowed_host",
+        "cache_no_store",
+        "random_ram_token"
+      ]
+    },
+    "local_mutation": {
+      "methods": [
+        "POST"
+      ],
+      "requirements": [
+        "allowed_host",
+        "origin_matches_host",
+        "content_type_application_json",
+        "request_token_header",
+        "no_cors",
+        "cache_no_store"
+      ],
+      "request_token_header": "X-WattPost-Request-Token"
+    }
+  },
+  "allowed_host_sources": [
+    "bms.local",
+    "active_sta_ipv4",
+    "active_softap_ipv4"
+  ],
+  "request_token": {
+    "path": "/api/device/request-token",
+    "entropy_bits": 128,
+    "storage": "ram_only",
+    "rotate_on": [
+      "boot",
+      "provisioning_mode_transition",
+      "recovery_mode_transition"
+    ],
+    "purpose": "browser_request_integrity_not_user_authentication"
+  },
+  "operation": {
+    "state": [
+      "idle",
+      "running",
+      "success",
+      "error"
+    ],
+    "phase": [
+      "none",
+      "scanning",
+      "validating",
+      "connecting",
+      "saving",
+      "reconnecting",
+      "resetting",
+      "restarting"
+    ],
+    "fields": [
+      "generation",
+      "state",
+      "phase",
+      "error_code"
+    ]
+  },
+  "errors": {
+    "invalid_request": 400,
+    "invalid_json": 400,
+    "invalid_state": 409,
+    "content_too_large": 413,
+    "forbidden_origin": 403,
+    "request_token_required": 403,
+    "request_token_invalid": 403,
+    "not_configured": 409,
+    "not_ready": 409,
+    "busy": 409,
+    "stale_scan": 409,
+    "candidate_not_found": 404,
+    "wifi_auth_failed": 409,
+    "wifi_not_found": 404,
+    "wifi_connect_failed": 503,
+    "bms_not_found": 404,
+    "bms_connect_failed": 503,
+    "bms_invalid": 409,
+    "storage_error": 500,
+    "subsystem_unavailable": 503,
+    "internal_error": 500
+  },
+  "forbidden_response_fields": [
+    "password",
+    "wifi_password",
+    "ota_token",
+    "full_bms_mac",
+    "bms_passcode",
+    "raw_config_blob"
+  ],
+  "endpoints": [
+    {
+      "id": "device_status",
+      "method": "GET",
+      "path": "/api/device/status",
+      "security": "local_read",
+      "async": false,
+      "response": "device_status"
+    },
+    {
+      "id": "request_token",
+      "method": "GET",
+      "path": "/api/device/request-token",
+      "security": "request_token",
+      "async": false,
+      "response": "request_token"
+    },
+    {
+      "id": "setup_finish_without_bms",
+      "method": "POST",
+      "path": "/api/device/setup/finish",
+      "security": "local_mutation",
+      "async": false,
+      "request_body_fields": [],
+      "response": "setup_finished"
+    },
+    {
+      "id": "wifi_scan_start",
+      "method": "POST",
+      "path": "/api/device/wifi/scan",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [],
+      "response": "operation"
+    },
+    {
+      "id": "wifi_scan_status",
+      "method": "GET",
+      "path": "/api/device/wifi/scan",
+      "security": "local_read",
+      "async": false,
+      "response": "wifi_scan"
+    },
+    {
+      "id": "wifi_configure",
+      "method": "POST",
+      "path": "/api/device/wifi/configure",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [
+        "scan_generation",
+        "candidate_id",
+        "hidden_ssid",
+        "password"
+      ],
+      "credential_request_fields": [
+        "password"
+      ],
+      "response": "operation"
+    },
+    {
+      "id": "wifi_reconnect",
+      "method": "POST",
+      "path": "/api/device/wifi/reconnect",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [],
+      "response": "operation"
+    },
+    {
+      "id": "wifi_reset",
+      "method": "POST",
+      "path": "/api/device/wifi/reset",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [
+        "confirm"
+      ],
+      "response": "operation",
+      "confirmation_value": "reset_wifi"
+    },
+    {
+      "id": "bms_scan_start",
+      "method": "POST",
+      "path": "/api/device/bms/scan",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [],
+      "response": "operation"
+    },
+    {
+      "id": "bms_scan_status",
+      "method": "GET",
+      "path": "/api/device/bms/scan",
+      "security": "local_read",
+      "async": false,
+      "response": "bms_scan"
+    },
+    {
+      "id": "bms_select",
+      "method": "POST",
+      "path": "/api/device/bms/select",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [
+        "scan_generation",
+        "candidate_id"
+      ],
+      "response": "operation"
+    },
+    {
+      "id": "bms_reconnect",
+      "method": "POST",
+      "path": "/api/device/bms/reconnect",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [],
+      "response": "operation"
+    },
+    {
+      "id": "bms_forget",
+      "method": "POST",
+      "path": "/api/device/bms/forget",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [
+        "confirm"
+      ],
+      "response": "operation",
+      "confirmation_value": "forget_bms"
+    },
+    {
+      "id": "system_reboot",
+      "method": "POST",
+      "path": "/api/device/system/reboot",
+      "security": "local_mutation",
+      "async": true,
+      "request_body_fields": [
+        "confirm"
+      ],
+      "response": "operation",
+      "confirmation_value": "reboot"
+    },
+    {
+      "id": "factory_reset",
+      "method": "POST",
+      "path": "/api/device/system/factory-reset",
+      "security": "local_mutation",
+      "async": true,
+      "destructive": true,
+      "confirmation_value": "factory_reset",
+      "request_body_fields": [
+        "confirm"
+      ],
+      "response": "operation"
+    },
+    {
+      "id": "temperature_config_legacy",
+      "method": "POST",
+      "path": "/api/config/temperature",
+      "security": "local_mutation",
+      "async": false,
+      "legacy": true,
+      "request_body_fields": [
+        "mode",
+        "mask"
+      ],
+      "response": "temperature_config"
+    }
+  ],
+  "device_status_enums": {
+    "setup_state": [
+      "wifi_required",
+      "bms_required",
+      "configured",
+      "config_error"
+    ]
+  }
+}

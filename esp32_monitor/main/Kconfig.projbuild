@@ -1,0 +1,6 @@
+menu "WattPost Mini"
+
+    # Stage 1 universal runtime configuration is stored in NVS (wp_cfg).
+    # Per-device Wi-Fi credentials and BMS MAC are intentionally not Kconfig.
+
+endmenu

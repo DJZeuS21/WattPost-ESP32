@@ -1,0 +1,17 @@
+# Generated ESP-IDF and local machine state
+/.local-tools
+/esp32_monitor/build/
+/esp32_monitor/sdkconfig
+/esp32_monitor/sdkconfig.old
+/esp32_monitor/managed_components/
+/esp32_monitor/secrets.local
+**/__pycache__/
+*.py[cod]
+node_modules/
+.pytest_cache/
+*.log
+*.pem
+*.key
+.DS_Store
+.vscode/
+.idea/
