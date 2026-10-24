@@ -45,6 +45,21 @@ New to ESP32? Follow the **[step-by-step installation guide](docs/INSTALLATION.e
 
 The firmware and local web interface source live in [`esp32_monitor/`](esp32_monitor/). You can build them with ESP-IDF 5.5.5. The WattPost Cloud server is not part of this repository.
 
+## License and permitted use
+
+WattPost can be used **free of charge at home, in a shop, office, or
+within a business** to monitor the user's own batteries. You may study,
+modify and share the firmware and its source free of charge.
+
+**Selling WattPost is not permitted**: you may not resell the firmware or
+charge for a product or service whose value derives substantially from
+WattPost functionality (including paid devices preloaded with WattPost).
+Commercial distribution requires separate permission from the rightsholder.
+
+Terms: [Apache 2.0 + Commons Clause](LICENSE). This is a **source-available**
+license, not OSI-defined Open Source. Third-party libraries retain their
+own terms: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## What you need
 
 - An ESP32-WROOM-32D or compatible classic ESP32 with 4 MB of flash.

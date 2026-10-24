@@ -1,0 +1,19 @@
+WattPost ESP32
+Copyright 2026 Ritual North (https://ritualnorth.com)
+
+WattPost original code is provided under the Apache License, Version 2.0,
+WITH the Commons Clause License Condition v1.0. The combined terms in
+LICENSE restrict selling WattPost-derived software/products/services.
+WattPost may be used within a home, workplace, shop or business.
+
+"WattPost" is a trademark of Ritual North. No trademark license is granted.
+
+This firmware is for monitoring only. Do not use it as the sole protection
+for battery safety; maintain the BMS's own independent protections.
+
+Vendored Chart.js, chartjs-plugin-zoom and Hammer.js are NOT covered by the
+WattPost Commons Clause. They remain MIT-licensed; see
+THIRD_PARTY_NOTICES.md and licenses/MIT.txt.
+
+ESP-IDF, NimBLE and espressif/mdns are external build dependencies.
+Their own licenses, notices and conditions apply to their code.
