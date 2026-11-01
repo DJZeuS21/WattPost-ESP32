@@ -45,8 +45,8 @@ test('changing a configured BMS requires explicit confirmation', () => {
   const select = SOURCE.slice(start, end);
   assert.match(select, /if \(this\.bmsConfigured\)/);
   assert.match(select, /global\.confirm/);
-  assert.match(select, /замінено тільки після успішної перевірки/);
-  assert.match(select, /Історія залишиться без змін/);
+  assert.match(select, /tr\('text\.change_jk_bms_the_current_selection_will_be_replaced_only'\)/);
+  assert.match(select, /tr\('text\.change_jk_bms_the_current_selection_will_be_replaced_only'\)/);
   assert.match(select, /scan_generation/);
   assert.match(select, /candidate_id/);
   assert.equal(/mac/i.test(select), false);
@@ -57,7 +57,7 @@ test('forget BMS confirmation explains narrow reset scope', () => {
   const end = SOURCE.indexOf('_setStatus(', start);
   const forget = SOURCE.slice(start, end);
   assert.match(forget, /global\.confirm/);
-  assert.match(forget, /Wi-Fi та історія залишаться без змін/);
+  assert.match(forget, /tr\('text\.forget_the_selected_jk_bms_wi_fi_and_history_will_be_prese'\)/);
   assert.match(forget, /global\.ApiClient\.forgetBms/);
 });
 

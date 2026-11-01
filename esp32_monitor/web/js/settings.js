@@ -2,6 +2,8 @@
 
 (function (global) {
   'use strict';
+  const tr = (key, values) => global.WattPostI18n.t(key, values);
+  const tEnglish = key => global.WattPostI18n.tLocale('en', key);
 
   // Text supplied by BMS/device JSON must never become executable markup.
   const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
@@ -40,7 +42,7 @@
 
     _buildLayout() {
       this.container.innerHTML = `
-        <h1 class="visually-hidden">Налаштування BMS</h1>
+        <h1 class="visually-hidden" data-i18n="nav.bms_settings">Налаштування BMS</h1>
 
         <!-- Top Device Summary -->
         <div id="settings-summary-container"></div>
@@ -52,15 +54,15 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="search" id="settings-search-input" class="settings-search-input" placeholder="Пошук налаштувань за назвою чи ключем API..." autocomplete="off" />
-            <button id="settings-search-clear" class="settings-search-clear" aria-label="Очистити пошук" style="display:none;">
+            <input type="search" id="settings-search-input" class="settings-search-input" placeholder="${tr('text.search_by_setting_name_or_api_key')}" autocomplete="off" />
+            <button id="settings-search-clear" class="settings-search-clear" aria-label="${tr('text.clear_search')}" style="display:none;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
           </div>
-          <div class="settings-search-count" id="settings-search-count">53 параметри</div>
+          <div class="settings-search-count" id="settings-search-count" data-i18n="text.53_parameters">53 параметри</div>
         </div>
 
         <!-- Connectivity / Warning Banner -->
@@ -75,10 +77,11 @@
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <div class="settings-empty-title">Нічого не знайдено</div>
-          <div class="settings-empty-desc" id="settings-empty-desc">За вказаним запитом налаштувань не знайдено.</div>
+          <div class="settings-empty-title" data-i18n="text.no_results">Нічого не знайдено</div>
+          <div class="settings-empty-desc" id="settings-empty-desc" data-i18n="text.no_settings_match_your_search">За вказаним запитом налаштувань не знайдено.</div>
         </div>
       `;
+      global.WattPostI18n?.apply?.(this.container);
     }
 
     _bindEvents() {
@@ -121,7 +124,7 @@
         if (summaryContainer) {
           summaryContainer.innerHTML = `
             <div class="settings-summary-card is-loading">
-              <div class="settings-summary-skeleton">Завантаження конфігурації BMS...</div>
+              <div class="settings-summary-skeleton">${tr('text.loading_bms_configuration')}</div>
             </div>
           `;
         }
@@ -129,7 +132,7 @@
           grid.innerHTML = `
             <div class="settings-loading-card">
               <span class="settings-spinner"></span>
-              <span>Отримання параметрів із GET /api/settings...</span>
+              <span>${tr('text.fetching_settings_from_get_api_settings')}</span>
             </div>
           `;
         }
@@ -146,8 +149,8 @@
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              <span>Параметри BMS наразі недоступні. Очікування першої відповіді від пристрою...</span>
-              <button class="settings-retry-btn" onclick="window.ApiClient && window.ApiClient.fetchSettings()">Повторити</button>
+              <span>${tr('text.bms_settings_unavailable_waiting_for_the_first_response')}</span>
+              <button class="settings-retry-btn" onclick="window.ApiClient && window.ApiClient.fetchSettings()">${tr('text.retry')}</button>
             </div>
           `;
         }
@@ -164,7 +167,7 @@
                 <line x1="12" y1="9" x2="12" y2="13"></line>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
               </svg>
-              <span>Відображаються збережені налаштування. Оновлення даних відтерміновано через тимчасову втрату зв'язку.</span>
+              <span>${tr('text.showing_saved_settings_refresh_is_delayed_because_the_conn')}</span>
             </div>
           `;
         }
@@ -224,45 +227,45 @@
         <div class="settings-summary-card">
           <div class="settings-summary-header">
             <div class="settings-summary-title-group">
-              <div class="settings-summary-title">${escapeHtml(devName)}</div>
-              <div class="settings-summary-subtitle">${escapeHtml(model)} <span class="settings-summary-proto">${escapeHtml(proto)}</span></div>
+              <div class="settings-summary-title" data-i18n-ignore>${escapeHtml(devName)}</div>
+              <div class="settings-summary-subtitle" data-i18n-ignore>${escapeHtml(model)} <span class="settings-summary-proto">${escapeHtml(proto)}</span></div>
             </div>
             <div class="settings-summary-badge-group">
               <div class="settings-summary-badge">
-                <span class="badge-label">Ємність</span>
-                <span class="badge-val">${escapeHtml(capacity)}</span>
+                <span class="badge-label">${tr('text.capacity')}</span>
+                <span class="badge-val" data-i18n-ignore>${escapeHtml(capacity)}</span>
               </div>
               <div class="settings-summary-badge">
-                <span class="badge-label">Тип акумулятора</span>
-                <span class="badge-val">${escapeHtml(chemistryStr)}</span>
+                <span class="badge-label">${tr('text.battery_type')}</span>
+                <span class="badge-val" data-i18n-ignore>${escapeHtml(chemistryStr)}</span>
               </div>
               <div class="settings-summary-badge">
-                <span class="badge-label">Стан акумулятора</span>
-                <span class="badge-val">${escapeHtml(sohStr)}</span>
+                <span class="badge-label">${tr('text.battery_status')}</span>
+                <span class="badge-val" data-i18n-ignore>${escapeHtml(sohStr)}</span>
               </div>
             </div>
           </div>
 
           <div class="settings-summary-grid">
             <div class="summary-meta-item">
-              <span class="meta-label">Серійний номер (S/N)</span>
-              <span class="meta-val font-mono">${escapeHtml(sn)}</span>
+              <span class="meta-label">${tr('text.serial_number_s_n')}</span>
+              <span class="meta-val font-mono" data-i18n-ignore>${escapeHtml(sn)}</span>
             </div>
             <div class="summary-meta-item">
-              <span class="meta-label">Версія HW / SW</span>
-              <span class="meta-val font-mono">${escapeHtml(hw)} / ${escapeHtml(sw)}</span>
+              <span class="meta-label">${tr('text.hw_sw_version')}</span>
+              <span class="meta-val font-mono" data-i18n-ignore>${escapeHtml(hw)} / ${escapeHtml(sw)}</span>
             </div>
             <div class="summary-meta-item">
-              <span class="meta-label">Топологія</span>
-              <span class="meta-val font-mono">${escapeHtml(cellCount)}</span>
+              <span class="meta-label">${tr('text.topology')}</span>
+              <span class="meta-val font-mono" data-i18n-ignore>${escapeHtml(cellCount)}</span>
             </div>
             <div class="summary-meta-item">
-              <span class="meta-label">Кількість увімкнень</span>
-              <span class="meta-val font-mono">${escapeHtml(powerOnCount)}</span>
+              <span class="meta-label">${tr('text.power_on_count')}</span>
+              <span class="meta-val font-mono" data-i18n-ignore>${escapeHtml(powerOnCount)}</span>
             </div>
             <div class="summary-meta-item">
-              <span class="meta-label">Час безперервної роботи</span>
-              <span class="meta-val font-mono">${escapeHtml(uptimeStr)}</span>
+              <span class="meta-label">${tr('text.continuous_uptime')}</span>
+              <span class="meta-val font-mono" data-i18n-ignore>${escapeHtml(uptimeStr)}</span>
             </div>
           </div>
         </div>
@@ -302,7 +305,9 @@
 
             contentHtml += `
               <div class="settings-subgroup" data-subgroup="${sub.id}">
-                <div class="settings-subgroup-title">${sub.titleUk} <span class="settings-subgroup-en">${sub.titleEn}</span></div>
+                <div class="settings-subgroup-title">${escapeHtml(tr(sub.titleKey))}${global.WattPostI18n.language === 'uk'
+                    ? ` <span class="settings-subgroup-en">${escapeHtml(tEnglish(sub.titleKey))}</span>`
+                    : ''}</div>
                 <div class="settings-subgroup-rows">
                   ${subRowsHtml}
                 </div>
@@ -318,8 +323,8 @@
         return `
           <div class="settings-section-card" data-section="${sec.id}">
             <div class="settings-section-header">
-              <div class="settings-section-title">${sec.titleUk}</div>
-              <div class="settings-section-desc">${sec.descriptionUk}</div>
+              <div class="settings-section-title">${escapeHtml(tr(sec.titleKey))}</div>
+              <div class="settings-section-desc">${escapeHtml(tr(sec.descriptionKey))}</div>
             </div>
             <div class="settings-section-body">
               ${contentHtml}
@@ -345,7 +350,11 @@
       const rawVal = normalizer ? normalizer.resolveValue(data, spec.key) : null;
       const formatted = normalizer ? normalizer.formatValue(spec, rawVal) : { text: String(rawVal), unit: '' };
 
-      const searchTerms = `${spec.labelUk} ${spec.labelEn} ${spec.key}`.toLowerCase();
+      const label = tr(spec.labelKey);
+      const englishReference = tEnglish(spec.labelKey);
+      const ukrainianReference = global.WattPostI18n.tLocale('uk', spec.labelKey);
+      // Search both localizations and the immutable API key in either language.
+      const searchTerms = `${label} ${englishReference} ${ukrainianReference} ${spec.key}`.toLowerCase();
 
       let valueHtml = '';
       if (spec.type === 'boolean') {
@@ -353,15 +362,15 @@
         valueHtml = `
           <div class="setting-badge ${isActive ? 'is-active' : 'is-inactive'}">
             <span class="setting-badge-dot"></span>
-            <span class="setting-badge-text">${escapeHtml(formatted.text)}</span>
+            <span class="setting-badge-text" data-i18n-ignore>${escapeHtml(formatted.text)}</span>
           </div>
         `;
       } else {
-        const secText = formatted.secondaryText ? `<span class="setting-secondary-text">(${escapeHtml(formatted.secondaryText)})</span>` : '';
+        const secText = formatted.secondaryText ? `<span class="setting-secondary-text" data-i18n-ignore>(${escapeHtml(formatted.secondaryText)})</span>` : '';
         const unitHtml = formatted.unit ? `<span class="setting-unit">${escapeHtml(formatted.unit)}</span>` : '';
         valueHtml = `
           <div class="setting-value-group">
-            <span class="setting-value font-mono tabular-nums">${escapeHtml(formatted.text)}</span>
+            <span class="setting-value font-mono tabular-nums" data-i18n-ignore>${escapeHtml(formatted.text)}</span>
             ${unitHtml}
             ${secText}
           </div>
@@ -369,11 +378,13 @@
       }
 
       return `
-        <div class="setting-row" data-key="${spec.key}" data-search="${searchTerms}">
+        <div class="setting-row" data-key="${spec.key}" data-search="${escapeHtml(searchTerms)}">
           <div class="setting-info">
-            <div class="setting-label-uk">${spec.labelUk}</div>
+            <div class="setting-label-uk">${escapeHtml(label)}</div>
             <div class="setting-meta">
-              <span class="setting-label-en">${spec.labelEn}</span>
+              ${global.WattPostI18n.language === 'uk'
+                ? `<span class="setting-label-en">${escapeHtml(englishReference)}</span>`
+                : ''}
               <span class="setting-key font-mono">${spec.key}</span>
             </div>
           </div>
@@ -400,7 +411,7 @@
         allSubgroups.forEach(sg => sg.style.display = 'block');
         allSections.forEach(s => s.style.display = 'flex');
         if (emptyState) emptyState.style.display = 'none';
-        if (countEl) countEl.textContent = `${allRows.length} параметрів`;
+        if (countEl) countEl.textContent = tr('bms.parameters_count', { count: allRows.length });
         return;
       }
 
@@ -422,14 +433,14 @@
       });
 
       if (countEl) {
-        countEl.textContent = `Знайдено: ${visibleCount}`;
+        countEl.textContent = tr('setup.found_count', { count: visibleCount });
       }
 
       if (emptyState) {
         if (visibleCount === 0) {
           emptyState.style.display = 'flex';
           if (emptyDesc) {
-            emptyDesc.textContent = `За запитом «${query}» налаштувань не знайдено. Перевірте правильність написання або спробуйте інший ключ.`;
+            emptyDesc.textContent = tr('bms.search_no_match', { query });
           }
         } else {
           emptyState.style.display = 'none';

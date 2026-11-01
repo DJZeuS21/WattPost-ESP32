@@ -17,55 +17,60 @@
       <img src="assets/logo.svg" alt="" class="setup-logo" width="40" height="40" />
       <div>
         <div class="setup-product">WattPost</div>
-        <div class="setup-version"><span id="setup-context">Перше налаштування</span> · <span id="setup-version">__WATTPOST_WEB_VERSION__</span></div>
+        <div class="setup-version"><span id="setup-context" data-i18n="setup.title">Перше налаштування</span> · <span id="setup-version">__WATTPOST_WEB_VERSION__</span></div>
       </div>
+      <label class="language-picker" aria-label="Мова / Language">
+        <select class="language-switch" data-language-switch aria-label="Мова / Language">
+          <option value="uk">UA</option><option value="en">EN</option>
+        </select>
+      </label>
     </header>
 
-    <ol class="setup-progress" id="setup-progress" aria-label="Етапи налаштування">
-      <li data-progress="welcome"><span>1</span><b>Початок</b></li>
+    <ol class="setup-progress" id="setup-progress" aria-label="Етапи налаштування" data-i18n-aria-label="text.setup_steps">
+      <li data-progress="welcome"><span>1</span><b data-i18n="setup.start">Початок</b></li>
       <li data-progress="wifi"><span>2</span><b>Wi-Fi</b></li>
       <li data-progress="bms"><span>3</span><b>JK BMS</b></li>
     </ol>
 
     <section class="setup-card is-active" data-step="loading">
       <div class="setup-spinner" aria-hidden="true"></div>
-      <h1>Перевірка WattPost</h1>
-      <p class="setup-muted">Зчитуємо стан пристрою…</p>
+      <h1 data-i18n="text.checking_wattpost">Перевірка WattPost</h1>
+      <p class="setup-muted" data-i18n="text.reading_device_status">Зчитуємо стан пристрою…</p>
     </section>
 
     <section class="setup-card" data-step="recovery">
-      <p class="setup-kicker">Відновлення Wi-Fi</p>
-      <h1>Відновлення WattPost</h1>
-      <p class="setup-muted">
+      <p class="setup-kicker" data-i18n="setup.wifi_recovery">Відновлення Wi-Fi</p>
+      <h1 data-i18n="text.wattpost_recovery">Відновлення WattPost</h1>
+      <p class="setup-muted" data-i18n="text.connect_wattpost_to_your_home_wi_fi_retry_the_saved_networ">
         Підключіть WattPost до домашнього Wi-Fi. Можна повторити підключення до
         збереженої мережі або вибрати іншу. Налаштування BMS та історія не зміняться.
       </p>
 
       <dl class="setup-summary">
-        <div><dt>Збережений Wi-Fi</dt><dd id="recovery-wifi">—</dd></div>
-        <div><dt>Стан Wi-Fi</dt><dd id="recovery-wifi-state">—</dd></div>
-        <div><dt>Інтернет</dt><dd id="recovery-internet-state">—</dd></div>
+        <div><dt data-i18n="text.saved_wi_fi">Збережений Wi-Fi</dt><dd id="recovery-wifi">—</dd></div>
+        <div><dt data-i18n="text.wi_fi_status">Стан Wi-Fi</dt><dd id="recovery-wifi-state">—</dd></div>
+        <div><dt data-i18n="text.internet">Інтернет</dt><dd id="recovery-internet-state">—</dd></div>
         <div><dt>JK BMS</dt><dd id="recovery-bms-state">—</dd></div>
-        <div><dt>Версія</dt><dd id="recovery-firmware">—</dd></div>
-        <div><dt>Час роботи</dt><dd id="recovery-uptime">—</dd></div>
+        <div><dt data-i18n="text.version">Версія</dt><dd id="recovery-firmware">—</dd></div>
+        <div><dt data-i18n="text.uptime">Час роботи</dt><dd id="recovery-uptime">—</dd></div>
       </dl>
 
-      <div class="setup-note" id="recovery-note">
+      <div class="setup-note" id="recovery-note" data-i18n="text.retry_the_saved_network_or_choose_another">
         Можна повторити підключення до збереженої мережі або вибрати іншу.
       </div>
       <div class="setup-error is-hidden" id="recovery-error" role="alert"></div>
 
       <div class="setup-action-stack">
-        <button class="setup-button setup-button-primary" id="recovery-reconnect" type="button">
+        <button class="setup-button setup-button-primary" id="recovery-reconnect" type="button" data-i18n="text.reconnect_to_saved_wi_fi">
           Повторити збережений Wi-Fi
         </button>
-        <button class="setup-button setup-button-secondary" id="recovery-change-wifi" type="button">
+        <button class="setup-button setup-button-secondary" id="recovery-change-wifi" type="button" data-i18n="text.choose_another_network">
           Обрати іншу мережу
         </button>
-        <button class="setup-button setup-button-secondary" id="recovery-reboot" type="button">
+        <button class="setup-button setup-button-secondary" id="recovery-reboot" type="button" data-i18n="text.restart_wattpost">
           Перезавантажити WattPost
         </button>
-        <button class="setup-button setup-button-danger" id="recovery-reset-wifi" type="button">
+        <button class="setup-button setup-button-danger" id="recovery-reset-wifi" type="button" data-i18n="setup.reset_wifi_only">
           Скинути тільки Wi-Fi
         </button>
       </div>
@@ -73,53 +78,53 @@
       <div class="setup-danger-zone">
         <label class="setup-check">
           <input id="recovery-factory-confirm" type="checkbox" />
-          <span>Я розумію, що повне скидання видалить Wi-Fi, вибір BMS, налаштування датчиків, історію та прив’язку до поточного акаунта Cloud.</span>
+          <span data-i18n="text.i_understand_that_a_factory_reset_erases_wi_fi_bms_selecti">Я розумію, що повне скидання видалить Wi-Fi, вибір BMS, налаштування датчиків, історію та прив’язку до поточного акаунта Cloud.</span>
         </label>
-        <p class="setup-help">
+        <p class="setup-help" data-i18n="text.after_restart_connect_to_wattpost_xxxx_and_open_192_168_4">
           Після перезапуску підключіться до мережі WattPost-XXXX і відкрийте 192.168.4.1.
           Налаштуйте Wi-Fi та BMS і повторно підключіть Cloud до потрібного акаунта.
           Старий доступ у Cloud зникне після того, як пристрій повідомить про скидання через інтернет.
         </p>
-        <button class="setup-button setup-button-danger" id="recovery-factory-reset" type="button" disabled>
+        <button class="setup-button setup-button-danger" id="recovery-factory-reset" type="button" disabled data-i18n="setup.factory_reset">
           Повністю скинути WattPost
         </button>
       </div>
     </section>
 
     <section class="setup-card" data-step="welcome">
-      <p class="setup-kicker">Новий WattPost</p>
-      <h1>Почнемо налаштування</h1>
-      <p class="setup-muted">
+      <p class="setup-kicker" data-i18n="text.new_wattpost">Новий WattPost</p>
+      <h1 data-i18n="setup.start_title">Почнемо налаштування</h1>
+      <p class="setup-muted" data-i18n="text.connect_wi_fi_and_find_your_jk_bms_over_bluetooth">
         Підключимо Wi-Fi та знайдемо JK BMS через Bluetooth.
       </p>
-      <button class="setup-button setup-button-primary" id="welcome-start" type="button">
+      <button class="setup-button setup-button-primary" id="welcome-start" type="button" data-i18n="text.start">
         Почати
       </button>
     </section>
 
     <section class="setup-card setup-step-card" data-step="wifi">
       <div class="setup-step-intro">
-        <p class="setup-kicker" id="wifi-step-kicker">Етап 2 / 3</p>
-        <h1 id="wifi-step-title">Підключення до Wi-Fi</h1>
-        <p class="setup-muted">Знайдіть мережу, до якої потрібно підключити WattPost.</p>
+        <p class="setup-kicker" id="wifi-step-kicker" data-i18n="text.step_2_of_3">Етап 2 / 3</p>
+        <h1 id="wifi-step-title" data-i18n="setup.connect_wifi">Підключення до Wi-Fi</h1>
+        <p class="setup-muted" data-i18n="text.choose_the_wi_fi_network_for_wattpost">Знайдіть мережу, до якої потрібно підключити WattPost.</p>
       </div>
 
       <div class="setup-toolbar">
-        <button class="setup-button setup-button-scan" id="wifi-scan" type="button">
+        <button class="setup-button setup-button-scan" id="wifi-scan" type="button" data-i18n="setup.scan_wifi">
           Знайти Wi-Fi мережі
         </button>
         <span class="setup-inline-status" id="wifi-scan-status"></span>
       </div>
 
-      <div class="setup-list" id="wifi-candidates" role="radiogroup" aria-label="Wi-Fi мережі">
-        <div class="setup-empty-state">Натисніть «Знайти Wi-Fi мережі», щоб почати пошук.</div>
+      <div class="setup-list" id="wifi-candidates" role="radiogroup" aria-label="Wi-Fi мережі" data-i18n-aria-label="text.wi_fi_networks">
+        <div class="setup-empty-state" data-i18n="text.select_scan_for_wi_fi_networks_to_start_scanning">Натисніть «Знайти Wi-Fi мережі», щоб почати пошук.</div>
       </div>
 
       <div id="wifi-credentials-home">
         <div class="setup-network-credentials is-hidden" id="wifi-credentials-panel">
           <div class="setup-selected-network" id="wifi-selected-network"></div>
           <div class="setup-field" id="wifi-password-field">
-            <label for="wifi-password">Пароль Wi-Fi</label>
+            <label for="wifi-password" data-i18n="text.wi_fi_password">Пароль Wi-Fi</label>
             <div class="setup-password-control">
               <input
                 id="wifi-password"
@@ -133,13 +138,13 @@
                 class="setup-password-toggle"
                 id="wifi-password-toggle"
                 type="button"
-                aria-label="Показати пароль"
+                aria-label="Показати пароль" data-i18n-aria-label="text.show_password"
                 aria-pressed="false"
-              >Показати</button>
+               data-i18n="text.show">Показати</button>
             </div>
-            <div class="setup-help">Для відкритої мережі пароль не потрібен.</div>
+            <div class="setup-help" data-i18n="text.open_networks_do_not_require_a_password">Для відкритої мережі пароль не потрібен.</div>
           </div>
-          <button class="setup-button setup-button-primary" id="wifi-connect" type="button">
+          <button class="setup-button setup-button-primary" id="wifi-connect" type="button" data-i18n="text.verify_and_save">
             Перевірити й зберегти
           </button>
         </div>
@@ -147,11 +152,11 @@
 
       <label class="setup-check">
         <input id="wifi-hidden-toggle" type="checkbox" />
-        <span>Прихована мережа</span>
+        <span data-i18n="text.hidden_network">Прихована мережа</span>
       </label>
 
       <div class="setup-field is-hidden" id="wifi-hidden-field">
-        <label for="wifi-hidden-ssid">Назва мережі</label>
+        <label for="wifi-hidden-ssid" data-i18n="text.network_name">Назва мережі</label>
         <input id="wifi-hidden-ssid" type="text" maxlength="32" autocomplete="off" spellcheck="false" />
         <div id="wifi-hidden-credentials-slot"></div>
       </div>
@@ -162,61 +167,61 @@
     <section class="setup-card" data-step="wifi-validating">
       <div class="setup-spinner" aria-hidden="true"></div>
       <p class="setup-kicker">Wi-Fi</p>
-      <h1>Перевіряємо мережу</h1>
-      <p class="setup-muted" id="wifi-validation-status">Підключення…</p>
-      <div class="setup-note">
+      <h1 data-i18n="text.checking_network">Перевіряємо мережу</h1>
+      <p class="setup-muted" id="wifi-validation-status" data-i18n="text.connecting">Підключення…</p>
+      <div class="setup-note" data-i18n="text.new_settings_are_saved_only_after_a_successful_wi_fi_conne">
         Нові налаштування будуть збережені лише після успішного підключення до Wi-Fi.
       </div>
       <div class="setup-error is-hidden" id="wifi-validation-error" role="alert"></div>
-      <button class="setup-button setup-button-secondary is-hidden" id="wifi-validation-retry" type="button">
+      <button class="setup-button setup-button-secondary is-hidden" id="wifi-validation-retry" type="button" data-i18n="text.choose_another_network">
         Обрати іншу мережу
       </button>
     </section>
 
     <section class="setup-card setup-step-card" data-step="bms">
       <div class="setup-step-intro">
-        <p class="setup-kicker">Етап 3 / 3</p>
-        <h1>Підключення до JK BMS</h1>
-        <p class="setup-muted">Увімкніть Bluetooth на BMS і запустіть пошук. Цей крок можна пропустити та підключити акумулятор пізніше в налаштуваннях WattPost.</p>
+        <p class="setup-kicker" data-i18n="text.step_3_of_3">Етап 3 / 3</p>
+        <h1 data-i18n="text.connect_to_jk_bms">Підключення до JK BMS</h1>
+        <p class="setup-muted" data-i18n="text.enable_bluetooth_on_your_bms_and_start_scanning_you_can_sk">Увімкніть Bluetooth на BMS і запустіть пошук. Цей крок можна пропустити та підключити акумулятор пізніше в налаштуваннях WattPost.</p>
       </div>
 
       <div class="setup-toolbar">
-        <button class="setup-button setup-button-scan" id="bms-scan" type="button">
+        <button class="setup-button setup-button-scan" id="bms-scan" type="button" data-i18n="setup.scan_bms">
           Знайти JK BMS
         </button>
         <span class="setup-inline-status" id="bms-scan-status"></span>
       </div>
 
       <div class="setup-list" id="bms-candidates" role="radiogroup" aria-label="JK BMS">
-        <div class="setup-empty-state">Натисніть «Знайти JK BMS», щоб почати пошук.</div>
+        <div class="setup-empty-state" data-i18n="text.select_scan_for_jk_bms_to_start_searching">Натисніть «Знайти JK BMS», щоб почати пошук.</div>
       </div>
       <div class="setup-error is-hidden" id="bms-scan-error" role="alert"></div>
-      <button class="setup-button setup-button-secondary" id="bms-skip" type="button">Підключити BMS пізніше</button>
-      <button class="setup-button setup-button-secondary" id="bms-change-wifi" type="button">Змінити Wi-Fi</button>
+      <button class="setup-button setup-button-secondary" id="bms-skip" type="button" data-i18n="text.connect_bms_later">Підключити BMS пізніше</button>
+      <button class="setup-button setup-button-secondary" id="bms-change-wifi" type="button" data-i18n="text.change_wi_fi">Змінити Wi-Fi</button>
     </section>
 
     <section class="setup-card" data-step="bms-validating">
       <div class="setup-spinner" aria-hidden="true"></div>
       <p class="setup-kicker">JK BMS</p>
-      <h1>Перевіряємо BMS</h1>
-      <p class="setup-muted" id="bms-validation-status">Підключення до вибраної BMS…</p>
-      <div class="setup-note">
+      <h1 data-i18n="text.checking_bms">Перевіряємо BMS</h1>
+      <p class="setup-muted" id="bms-validation-status" data-i18n="text.connecting_to_selected_bms">Підключення до вибраної BMS…</p>
+      <div class="setup-note" data-i18n="text.wattpost_saves_your_selection_after_it_receives_data_from">
         WattPost збереже вибір після того, як отримає дані від BMS.
       </div>
       <div class="setup-error is-hidden" id="bms-validation-error" role="alert"></div>
-      <button class="setup-button setup-button-secondary is-hidden" id="bms-validation-retry" type="button">
+      <button class="setup-button setup-button-secondary is-hidden" id="bms-validation-retry" type="button" data-i18n="text.choose_another_bms">
         Обрати іншу BMS
       </button>
-      <button class="setup-button setup-button-secondary is-hidden" id="bms-validation-skip" type="button">
+      <button class="setup-button setup-button-secondary is-hidden" id="bms-validation-skip" type="button" data-i18n="text.connect_bms_later">
         Підключити BMS пізніше
       </button>
     </section>
 
     <section class="setup-card" data-step="success">
       <div class="setup-success-icon" aria-hidden="true">✓</div>
-      <p class="setup-kicker">Готово</p>
-      <h1>WattPost налаштовано</h1>
-      <p class="setup-muted" id="success-description">
+      <p class="setup-kicker" data-i18n="text.done">Готово</p>
+      <h1 data-i18n="text.wattpost_is_configured">WattPost налаштовано</h1>
+      <p class="setup-muted" id="success-description" data-i18n="text.the_setup_network_will_close_shortly_connect_to_your_home">
         Мережа налаштування закриється за кілька секунд. Підключіться до домашнього
         Wi-Fi та відкрийте панель WattPost.
       </p>
@@ -224,36 +229,39 @@
       <dl class="setup-summary">
         <div><dt>Wi-Fi</dt><dd id="success-wifi">—</dd></div>
         <div><dt>JK BMS</dt><dd id="success-bms">—</dd></div>
-        <div><dt>Локальна адреса</dt><dd>bms.local</dd></div>
+        <div><dt data-i18n="text.local_address">Локальна адреса</dt><dd>bms.local</dd></div>
       </dl>
 
-      <a class="setup-button setup-button-primary setup-link-button" id="success-local" href="http://bms.local/">
+      <a class="setup-button setup-button-primary setup-link-button" id="success-local" href="http://bms.local/" data-i18n="setup.open_dashboard">
         Відкрити панель
       </a>
-      <a class="setup-fallback-link is-hidden" id="success-ip" href="#">
+      <a class="setup-fallback-link is-hidden" id="success-ip" href="#" data-i18n="text.open_via_ip_address">
         Відкрити за IP-адресою
       </a>
-      <button class="setup-button setup-button-secondary" id="success-change-wifi" type="button">Змінити Wi-Fi</button>
+      <button class="setup-button setup-button-secondary" id="success-change-wifi" type="button" data-i18n="text.change_wi_fi">Змінити Wi-Fi</button>
     </section>
 
     <section class="setup-card" data-step="config-error">
-      <p class="setup-kicker setup-kicker-error">Потрібна перевірка</p>
-      <h1>Не вдалося завантажити налаштування</h1>
-      <p class="setup-muted">
+      <p class="setup-kicker setup-kicker-error" data-i18n="text.needs_attention">Потрібна перевірка</p>
+      <h1 data-i18n="text.could_not_load_settings">Не вдалося завантажити налаштування</h1>
+      <p class="setup-muted" data-i18n="text.wattpost_cannot_use_the_saved_settings_no_data_was_erased">
         WattPost не може використати збережені налаштування. Дані не видалено.
       </p>
-      <button class="setup-button setup-button-secondary" id="config-retry" type="button">
+      <button class="setup-button setup-button-secondary" id="config-retry" type="button" data-i18n="text.check_again">
         Перевірити ще раз
       </button>
     </section>
 
     <footer class="setup-footer">
-      <span id="setup-device-state">Локальне налаштування</span>
+      <span id="setup-device-state" data-i18n="text.local_setup">Локальне налаштування</span>
       <span>·</span>
-      <span>Працює локально</span>
+      <span data-i18n="text.works_offline">Працює локально</span>
     </footer>
   </main>
 
+  <script src="js/i18n.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/i18n-uk.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/i18n-en.js?v=__WATTPOST_WEB_VERSION__"></script>
   <script src="js/setup-api.js?v=__WATTPOST_WEB_VERSION__"></script>
   <script src="js/setup.js?v=__WATTPOST_WEB_VERSION__"></script>
 </body>

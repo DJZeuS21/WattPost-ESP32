@@ -26,7 +26,15 @@ sandbox.window.EnergyFlow = sandbox.EnergyFlow;
 sandbox.window.WattCharts = sandbox.WattCharts;
 sandbox.window.STATE_COLORS = sandbox.STATE_COLORS;
 sandbox.global = sandbox.window;
+sandbox.window.navigator = { language: 'uk-UA', languages: ['uk-UA'] };
+sandbox.window.location = { search: '' };
+sandbox.window.localStorage = { getItem: () => null, setItem: () => {} };
+sandbox.URLSearchParams = URLSearchParams;
 createContext(sandbox);
+for (const filename of ['i18n.js', 'i18n-uk.js', 'i18n-en.js']) {
+  runInContext(readFileSync(new URL('../js/' + filename, import.meta.url), 'utf-8'), sandbox);
+  if (filename === 'i18n.js') sandbox.WattPostI18n = sandbox.window.WattPostI18n;
+}
 runInContext(dashboardCode, sandbox);
 
 const formatEta = sandbox.window.formatEta;
@@ -119,4 +127,31 @@ test('computeDirectionalEta returns empty string for IDLE state', () => {
     computeDirectionalEta('idle', { soc: 100, remaining_capacity_ah: 315, nominal_capacity_ah: 315 }, 0),
     ''
   );
+});
+
+
+test('English ETA uses stable duration templates without changing charging logic', () => {
+  const en = {
+    window: {
+      BatteryColors: sandbox.BatteryColors, EnergyFlow: sandbox.EnergyFlow,
+      WattCharts: sandbox.WattCharts, STATE_COLORS: sandbox.STATE_COLORS,
+      navigator: { language: 'en-US', languages: ['en-US'] },
+      location: { search: '' },
+      localStorage: { getItem: () => null, setItem: () => {} },
+    },
+    URLSearchParams,
+  };
+  createContext(en);
+  for (const filename of ['i18n.js', 'i18n-uk.js', 'i18n-en.js']) {
+    runInContext(readFileSync(new URL('../js/' + filename, import.meta.url), 'utf8'), en);
+    if (filename === 'i18n.js') en.WattPostI18n = en.window.WattPostI18n;
+  }
+  runInContext(dashboardCode, en);
+  assert.equal(en.window.formatEta(47 / 60), '47 min');
+  assert.equal(en.window.formatEta(2.25), '2 h 15 min');
+  assert.equal(en.window.formatEta(27), '1 d 3 h');
+  assert.equal(en.window.computeDirectionalEta('charging', { soc: 100 }, 0.1), 'Charged');
+  assert.equal(en.window.computeDirectionalEta('discharging',
+    { remaining_capacity_ah: 27 }, 1), '≈ 1 d 3 h');
+  assert.equal(en.window.formatEta(-1), null);
 });

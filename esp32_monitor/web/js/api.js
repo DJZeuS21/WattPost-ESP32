@@ -436,12 +436,12 @@
         const timeSinceSuccess = Date.now() - this._lastLiveSuccessTimestamp;
         if (this._lastLiveSuccessTimestamp === 0) {
           this._setConnectivityState(CONNECTIVITY_STATES.PROLONGED_OFFLINE);
-          const offlineState = { online: false, state: 'offline', message: 'Немає зв’язку з сервером' };
+          const offlineState = { online: false, state: 'offline', messageKey: 'telemetry.server_unreachable' };
           this.liveData = offlineState;
           this._notifyLive(offlineState);
         } else if (timeSinceSuccess > OFFLINE_THRESHOLD_MS) {
           this._setConnectivityState(CONNECTIVITY_STATES.PROLONGED_OFFLINE);
-          const offlineState = { online: false, state: 'offline', message: 'Втрачено зв’язок з BMS' };
+          const offlineState = { online: false, state: 'offline', messageKey: 'telemetry.bms_connection_lost' };
           this.liveData = offlineState;
           this._notifyLive(offlineState);
         } else if (timeSinceSuccess > STALE_THRESHOLD_MS) {

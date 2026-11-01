@@ -83,8 +83,8 @@ python3 "$IDF_PATH/components/partition_table/gen_esp32part.py" \
 cmp "$expected_partition" "$build_dir/partition_table/partition-table.bin"
 
 asset_count="$(find "$build_dir/generated_web" -type f -name '*.gz' | wc -l | tr -d ' ')"
-if [[ "$asset_count" != "24" ]]; then
-  echo "Stage 1 acceptance: expected 24 production gzip assets, got $asset_count." >&2
+if [[ "$asset_count" != "27" ]]; then
+  echo "Stage 1 acceptance: expected 27 production gzip assets, got $asset_count." >&2
   exit 1
 fi
 

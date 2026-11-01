@@ -200,6 +200,7 @@ test('Recovery browser shell reconnects saved Wi-Fi without losing recovery cont
   const debugPort = 9374;
   const chrome = spawn('google-chrome', [
     '--headless=new',
+    '--lang=uk-UA',
     `--remote-debugging-port=${debugPort}`,
     '--disable-gpu',
     '--no-sandbox',
@@ -231,6 +232,10 @@ test('Recovery browser shell reconnects saved Wi-Fi without losing recovery cont
       ws.send(JSON.stringify({ id, method, params }));
     });
 
+    await send('Runtime.evaluate', {
+      expression: "localStorage.setItem('wattpost.language', 'uk')",
+    });
+    await send('Page.reload', { ignoreCache: true });
     await waitFor(
       send,
       `document.querySelector('[data-step="recovery"]').classList.contains('is-active')`,

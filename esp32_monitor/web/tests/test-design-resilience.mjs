@@ -20,6 +20,7 @@ const server = http.createServer((req, res) => {
 server.listen(3983, '127.0.0.1', async () => {
   const chrome = spawn('google-chrome', [
     '--headless=new',
+    '--lang=uk-UA',
     '--remote-debugging-port=9348',
     '--disable-gpu',
     '--no-sandbox',
@@ -50,6 +51,12 @@ server.listen(3983, '127.0.0.1', async () => {
     });
     await send('Runtime.enable');
     await send('Page.enable');
+    await send('Runtime.evaluate', {
+      expression: "localStorage.setItem('wattpost.language', 'uk')",
+    });
+    await send('Page.reload', { ignoreCache: true });
+    await new Promise(resolve => setTimeout(resolve, 350));
+
 
     const evaluate = async (expr) => {
       const res = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });

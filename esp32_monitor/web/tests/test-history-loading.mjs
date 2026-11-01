@@ -24,7 +24,15 @@ test('HistoryView loads older data only for 7d and 14d periods', async () => {
     },
     document: { querySelectorAll: () => buttons },
   };
+  context.URLSearchParams = URLSearchParams;
+  context.window.navigator = { language: 'uk-UA', languages: ['uk-UA'] };
+  context.window.location = { search: '' };
+  context.window.localStorage = { getItem: () => null, setItem() {} };
   vm.createContext(context);
+  for (const filename of ['i18n.js', 'i18n-uk.js', 'i18n-en.js']) {
+    vm.runInContext(await readFile(new URL('../js/' + filename, import.meta.url), 'utf8'), context);
+    if (filename === 'i18n.js') context.WattPostI18n = context.window.WattPostI18n;
+  }
   vm.runInContext(code, context);
 
   const view = new context.window.HistoryView();

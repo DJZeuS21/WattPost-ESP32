@@ -4,80 +4,82 @@
   const api = global.WattPostSetupApi;
   const ApiError = global.WattPostSetupApiError;
   const POLL_MS = 600;
+  const tr = (key, values) => global.WattPostI18n.t(key, values);
+  if (global.document) global.document.title = tr('text.wattpost_first_setup');
 
   const ERROR_TEXT = {
-    busy: 'Пристрій уже виконує іншу операцію. Спробуйте ще раз.',
-    stale_scan: 'Результати сканування застаріли. Запустіть нове сканування.',
-    candidate_not_found: 'Вибраний пристрій більше не доступний. Оновіть список і спробуйте ще раз.',
-    wifi_auth_failed: 'Не вдалося підключитися до Wi-Fi. Перевірте пароль.',
-    wifi_not_found: 'Мережу Wi-Fi не знайдено. Перевірте назву або повторіть сканування.',
-    wifi_connect_failed: 'Не вдалося підключитися до Wi-Fi. Виправте дані та спробуйте ще раз.',
-    bms_connect_failed: 'Не вдалося підключитися до вибраної JK BMS.',
-    bms_invalid: 'WattPost підключився, але не отримав дані від цієї JK BMS.',
-    storage_error: 'Не вдалося зберегти налаштування. Попередні налаштування залишилися без змін.',
-    subsystem_unavailable: 'Ця функція тимчасово недоступна. Спробуйте ще раз.',
-    not_configured: 'Потрібне попереднє налаштування.',
-    not_ready: 'Wi-Fi ще не готовий. Перевірте підключення та спробуйте ще раз.',
-    forbidden_origin: 'Цю дію можна виконати лише з локальної сторінки WattPost.',
-    invalid_request: 'Некоректний запит.',
-    invalid_response: 'WattPost повернув некоректну відповідь.',
-    operation_timeout: 'Операція не завершилася в очікуваний час. Спробуйте ще раз.',
-    operation_reset: 'WattPost перезапустився під час операції. Спробуйте ще раз.',
-    request_failed: 'Не вдалося виконати запит до WattPost.',
+    busy: tr('text.the_device_is_already_busy_try_again'),
+    stale_scan: tr('text.scan_results_have_expired_scan_again'),
+    candidate_not_found: tr('text.selected_device_is_no_longer_available_refresh_the_list_an'),
+    wifi_auth_failed: tr('text.could_not_connect_to_wi_fi_check_the_password'),
+    wifi_not_found: tr('text.wi_fi_network_not_found_check_its_name_or_rescan'),
+    wifi_connect_failed: tr('text.could_not_connect_to_wi_fi_correct_the_details_and_try_aga'),
+    bms_connect_failed: tr('text.could_not_connect_to_the_selected_jk_bms'),
+    bms_invalid: tr('text.wattpost_connected_but_did_not_receive_data_from_this_jk_b'),
+    storage_error: tr('text.could_not_save_settings_previous_settings_are_unchanged'),
+    subsystem_unavailable: tr('text.this_feature_is_temporarily_unavailable_try_again'),
+    not_configured: tr('text.initial_setup_is_required'),
+    not_ready: tr('text.wi_fi_is_not_ready_check_the_connection_and_try_again'),
+    forbidden_origin: tr('text.this_action_is_only_available_on_the_local_wattpost_page'),
+    invalid_request: tr('text.invalid_request'),
+    invalid_response: tr('text.wattpost_returned_an_invalid_response'),
+    operation_timeout: tr('text.operation_timed_out_try_again'),
+    operation_reset: tr('text.wattpost_restarted_during_the_operation_try_again'),
+    request_failed: tr('text.could_not_contact_wattpost'),
   };
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   function errorText(error) {
     const code = error?.code || error?.message || 'request_failed';
-    return ERROR_TEXT[code] || `Помилка: ${code}`;
+    return ERROR_TEXT[code] || tr('setup.error_code', { code });
   }
 
   function phaseText(phase) {
     return {
-      scanning: 'Сканування…',
-      connecting: 'Підключення…',
-      validating: 'Перевірка даних…',
-      saving: 'Збереження…',
-      reconnecting: 'Перепідключення…',
-      resetting: 'Оновлення стану…',
-      none: 'Очікування…',
-    }[phase] || 'Виконується…';
+      scanning: tr('text.scanning'),
+      connecting: tr('text.connecting'),
+      validating: tr('text.validating'),
+      saving: tr('text.saving'),
+      reconnecting: tr('text.reconnecting'),
+      resetting: tr('text.updating_status'),
+      none: tr('text.waiting'),
+    }[phase] || tr('text.working');
   }
 
   function wifiStateText(state) {
     return {
-      connected: 'Підключено',
-      connecting: 'Підключення…',
-      disconnected: 'Немає з’єднання',
-      error: 'Помилка',
-    }[state] || 'Невідомо';
+      connected: tr('text.connected'),
+      connecting: tr('text.connecting'),
+      disconnected: tr('text.disconnected'),
+      error: tr('text.error'),
+    }[state] || tr('text.unknown');
   }
 
   function internetStateText(state) {
     return {
-      reachable: 'Доступний',
-      unreachable: 'Недоступний',
-      unknown: 'Не перевірено',
-    }[state] || 'Не перевірено';
+      reachable: tr('text.reachable'),
+      unreachable: tr('text.unavailable'),
+      unknown: tr('text.not_checked'),
+    }[state] || tr('text.not_checked');
   }
 
   function bmsStateText(state) {
     return {
-      connected: 'Підключено',
-      connecting: 'Підключення…',
-      disconnected: 'Немає з’єднання',
-      error: 'Помилка',
-    }[state] || 'Невідомо';
+      connected: tr('text.connected'),
+      connecting: tr('text.connecting'),
+      disconnected: tr('text.disconnected'),
+      error: tr('text.error'),
+    }[state] || tr('text.unknown');
   }
 
   function uptimeText(seconds) {
     const value = Number(seconds);
     if (!Number.isFinite(value) || value < 0) return '—';
-    if (value < 60) return `${Math.floor(value)} с`;
-    if (value < 3600) return `${Math.floor(value / 60)} хв`;
-    if (value < 86400) return `${Math.floor(value / 3600)} год`;
-    return `${Math.floor(value / 86400)} дн`;
+    if (value < 60) return tr('setup.uptime_seconds', { count: Math.floor(value) });
+    if (value < 3600) return tr('setup.uptime_minutes', { count: Math.floor(value / 60) });
+    if (value < 86400) return tr('setup.uptime_hours', { count: Math.floor(value / 3600) });
+    return tr('setup.uptime_days', { count: Math.floor(value / 86400) });
   }
 
   class SetupApp {
@@ -184,20 +186,20 @@
       }
 
       const mode = this.recoveryMode
-        ? 'Відновлення Wi-Fi'
-        : (status?.mode === 'first_setup' ? 'Перше налаштування' : 'Локальний режим');
+        ? tr('setup.wifi_recovery')
+        : (status?.mode === 'first_setup' ? tr('setup.title') : tr('text.local_mode'));
       this.$('setup-context').textContent = mode;
       this.$('setup-device-state').textContent = version ? `${mode} · ${version}` : mode;
       this.$('setup-progress').classList.toggle('is-hidden', this.recoveryMode);
-      this.$('wifi-step-kicker').textContent = this.recoveryMode ? 'Відновлення Wi-Fi' : 'Етап 2 / 3';
+      this.$('wifi-step-kicker').textContent = this.recoveryMode ? tr('setup.wifi_recovery') : tr('text.step_2_of_3');
       this.$('wifi-step-title').textContent = this.recoveryMode
-        ? 'Оберіть іншу Wi-Fi мережу'
-        : 'Підключення до Wi-Fi';
+        ? tr('text.select_another_wi_fi_network')
+        : tr('setup.connect_wifi');
 
       if (typeof document !== 'undefined') {
         document.title = this.recoveryMode
-          ? 'WattPost — Відновлення Wi-Fi'
-          : 'WattPost — Перше налаштування';
+          ? tr('text.wattpost_wi_fi_recovery')
+          : tr('text.wattpost_first_setup');
       }
     }
 
@@ -258,8 +260,8 @@
       const password = this.$('wifi-password');
       const toggle = this.$('wifi-password-toggle');
       password.type = visible ? 'text' : 'password';
-      toggle.textContent = visible ? 'Сховати' : 'Показати';
-      toggle.setAttribute('aria-label', visible ? 'Сховати пароль' : 'Показати пароль');
+      toggle.textContent = visible ? tr('text.hide') : tr('text.show');
+      toggle.setAttribute('aria-label', visible ? tr('text.hide_password') : tr('text.show_password'));
       toggle.setAttribute('aria-pressed', visible ? 'true' : 'false');
     }
 
@@ -307,7 +309,8 @@
 
       const wifi = status?.wifi || {};
       const bms = status?.bms || {};
-      this.$('recovery-wifi').textContent = wifi.ssid || 'Не збережено';
+      this.$('recovery-wifi').toggleAttribute('data-i18n-ignore', Boolean(wifi.ssid));
+      this.$('recovery-wifi').textContent = wifi.ssid || tr('text.not_saved');
       this.$('recovery-wifi-state').textContent = wifiStateText(wifi.state);
       this.$('recovery-internet-state').textContent =
         internetStateText(wifi.internet_state);
@@ -318,7 +321,8 @@
         bms.model,
         bms.address_hint,
       ].filter(Boolean).join(' · ');
-      this.$('recovery-bms-state').textContent = bmsLabel || 'Немає даних';
+      this.$('recovery-bms-state').setAttribute('data-i18n-ignore', '');
+      this.$('recovery-bms-state').textContent = bmsLabel || tr('text.no_data');
 
       const firmware = status?.firmware || {};
       this.$('recovery-firmware').textContent = firmware.version || '—';
@@ -326,8 +330,8 @@
 
       this.$('recovery-note').textContent = message || (
         wifi.state === 'connected'
-          ? 'WattPost зараз підключений до Wi-Fi. Можна повторити підключення або вибрати іншу мережу.'
-          : 'Можна повторити підключення до збереженої мережі або вибрати іншу.'
+          ? tr('text.wattpost_is_connected_to_wi_fi_retry_the_connection_or_cho')
+          : tr('text.retry_the_saved_network_or_choose_another')
       );
     }
 
@@ -335,7 +339,7 @@
       if (this.busy) return;
       this.clearError('recovery-error');
       this.setBusy(true);
-      this.$('recovery-note').textContent = 'Повторне підключення до збереженої Wi-Fi мережі…';
+      this.$('recovery-note').textContent = tr('text.reconnecting_to_saved_wi_fi');
 
       try {
         const started = await api.reconnectWifi();
@@ -351,12 +355,12 @@
         const status = await api.getStatus();
         this.showRecovery(
           status,
-          'Wi-Fi відновлено. За кілька секунд WattPost закриє мережу налаштування. Підключіться до домашнього Wi-Fi та відкрийте bms.local.',
+          tr('text.wi_fi_restored_the_setup_network_will_close_shortly_connec'),
         );
       } catch (error) {
         this.showError('recovery-error', errorText(error));
         this.$('recovery-note').textContent =
-          'Збережена мережа поки недоступна. Можна повторити спробу або вибрати іншу.';
+          tr('text.saved_network_is_not_available_yet_retry_or_choose_another');
       } finally {
         this.setBusy(false);
       }
@@ -368,7 +372,7 @@
       if (
         action === 'reset-wifi' &&
         typeof global.confirm === 'function' &&
-        !global.confirm('Скинути тільки збережений Wi-Fi? JK BMS і History залишаться без змін.')
+        !global.confirm(tr('text.reset_saved_wi_fi_only_jk_bms_and_history_will_not_be_affe'))
       ) {
         return;
       }
@@ -383,15 +387,15 @@
       const actions = {
         reboot: {
           run: () => api.reboot(),
-          message: 'Перезавантаження прийнято. З’єднання тимчасово зникне.',
+          message: tr('text.restart_requested_connection_will_be_interrupted_temporari'),
         },
         'reset-wifi': {
           run: () => api.resetWifi(),
-          message: 'Налаштування Wi-Fi видалено. WattPost перезапуститься та відкриє початкове налаштування.',
+          message: tr('text.wi_fi_settings_erased_wattpost_will_restart_in_first_setup'),
         },
         'factory-reset': {
           run: () => api.factoryReset(),
-          message: 'Повне скидання запущено. WattPost перезапуститься та відкриє початкове налаштування.',
+          message: tr('text.factory_reset_started_wattpost_will_restart_in_first_setup'),
         },
       };
       const selected = actions[action];
@@ -432,10 +436,10 @@
     async scanWifi() {
       if (this.busy) return;
       this.clearError('wifi-form-error');
-      this.$('wifi-scan').textContent = 'Сканування…';
+      this.$('wifi-scan').textContent = tr('text.scanning');
       this.$('wifi-scan').classList.add('is-loading');
       this.$('wifi-scan').setAttribute('aria-busy', 'true');
-      this.$('wifi-scan-status').textContent = 'Шукаємо доступні мережі…';
+      this.$('wifi-scan-status').textContent = tr('text.searching_for_wi_fi_networks');
       this.setBusy(true);
       try {
         const started = await api.startWifiScan();
@@ -454,13 +458,13 @@
         this.setPasswordVisible(false);
         this.renderWifiCandidates(snapshot.candidates || []);
         this.$('wifi-scan-status').textContent = snapshot.candidates?.length
-          ? `Знайдено: ${snapshot.candidates.length}`
-          : 'Мереж не знайдено';
+          ? tr('setup.found_count', { count: snapshot.candidates.length })
+          : tr('text.no_networks_found');
       } catch (error) {
         this.$('wifi-scan-status').textContent = '';
         this.showError('wifi-form-error', errorText(error));
       } finally {
-        this.$('wifi-scan').textContent = 'Оновити список мереж';
+        this.$('wifi-scan').textContent = tr('text.refresh_networks');
         this.$('wifi-scan').classList.remove('is-loading');
         this.$('wifi-scan').removeAttribute('aria-busy');
         this.setBusy(false);
@@ -475,7 +479,7 @@
       if (!Array.isArray(candidates) || !candidates.length) {
         const empty = document.createElement('div');
         empty.className = 'setup-note';
-        empty.textContent = 'Мереж не знайдено. Повторіть пошук або введіть назву прихованої мережі.';
+        empty.textContent = tr('text.no_networks_found_scan_again_or_enter_a_hidden_network_nam');
         root.appendChild(empty);
         this.placeWifiCredentials(credentials);
         return;
@@ -495,12 +499,13 @@
         const info = document.createElement('div');
         const title = document.createElement('div');
         title.className = 'setup-candidate-title';
-        title.textContent = candidate.ssid || 'Без назви';
+        title.toggleAttribute('data-i18n-ignore', Boolean(candidate.ssid));
+        title.textContent = candidate.ssid || tr('text.unnamed');
         const meta = document.createElement('div');
         meta.className = 'setup-candidate-meta';
         meta.textContent = candidate.auth === 'open'
-          ? `Відкрита мережа · канал ${candidate.channel}`
-          : `${candidate.auth || 'захищена'} · канал ${candidate.channel}`;
+          ? tr('setup.open_network_channel', { channel: candidate.channel })
+          : tr('setup.network_channel', { security: candidate.auth || tr('text.secured'), channel: candidate.channel });
         info.append(title, meta);
 
         const signal = document.createElement('div');
@@ -539,7 +544,7 @@
       const selectedNetwork = credentials.querySelector('#wifi-selected-network');
       if (hidden) {
         this.$('wifi-hidden-credentials-slot').appendChild(credentials);
-        selectedNetwork.textContent = 'Прихована Wi-Fi мережа';
+        selectedNetwork.textContent = tr('text.hidden_wi_fi_network');
         passwordField.classList.remove('is-hidden');
         credentials.classList.remove('is-hidden');
         return;
@@ -549,7 +554,8 @@
       // field or the submit action inside that bounded scrolling area.
       this.$('wifi-credentials-home').appendChild(credentials);
       if (this.selectedWifi) {
-        selectedNetwork.textContent = this.selectedWifi.ssid || 'Без назви';
+        selectedNetwork.toggleAttribute('data-i18n-ignore', Boolean(this.selectedWifi.ssid));
+        selectedNetwork.textContent = this.selectedWifi.ssid || tr('text.unnamed');
         passwordField.classList.toggle('is-hidden', this.selectedWifi.auth === 'open');
         credentials.classList.remove('is-hidden');
       } else {
@@ -569,17 +575,17 @@
       if (hidden) {
         const hiddenSsid = this.$('wifi-hidden-ssid').value.trim();
         if (!hiddenSsid) {
-          this.showError('wifi-form-error', 'Вкажіть назву прихованої мережі.');
+          this.showError('wifi-form-error', tr('text.enter_the_hidden_network_name'));
           return;
         }
         request = { hidden_ssid: hiddenSsid, password };
       } else {
         if (!this.wifiScan || !this.selectedWifi) {
-          this.showError('wifi-form-error', 'Оберіть мережу зі списку.');
+          this.showError('wifi-form-error', tr('text.choose_a_network_from_the_list'));
           return;
         }
         if (this.selectedWifi.auth !== 'open' && !password) {
-          this.showError('wifi-form-error', 'Введіть пароль вибраної мережі.');
+          this.showError('wifi-form-error', tr('text.enter_the_selected_network_password'));
           return;
         }
         request = {
@@ -614,7 +620,7 @@
         if (recoveryFlow) {
           this.showRecovery(
             status,
-            'Нову Wi-Fi мережу збережено. За кілька секунд WattPost закриє мережу налаштування. Підключіться до домашнього Wi-Fi та відкрийте bms.local. Якщо BMS ще не вибрано, завершіть її налаштування там.',
+            tr('setup.wifi_saved_recovery'),
           );
         } else if (status.setup_state === 'bms_required') {
           this.showStep('bms');
@@ -631,9 +637,9 @@
         this.showStep('wifi-validating');
         this.showError('wifi-validation-error', errorText(error));
         this.$('wifi-validation-error').textContent += this.recoveryMode
-          ? ' Якщо мережу вже збережено й точку налаштування закрито, підключіться до домашнього Wi-Fi та відкрийте bms.local. Для повторного відновлення утримуйте BOOT 5–10 секунд і відпустіть.'
-          : ' Якщо сторінка втратила зв’язок, поверніться до Wi-Fi WattPost-XXXX і відкрийте 192.168.4.1, щоб виправити налаштування. Якщо налаштування вже завершено, відкрийте bms.local у домашній мережі.';
-        this.$('wifi-validation-status').textContent = 'Перевірка не завершена';
+          ? tr('setup.wifi_recovery_error_hint')
+          : tr('setup.wifi_first_error_hint');
+        this.$('wifi-validation-status').textContent = tr('text.verification_incomplete');
         this.$('wifi-validation-retry').classList.remove('is-hidden');
       } finally {
         this.setBusy(false);
@@ -661,10 +667,10 @@
     async scanBms() {
       if (this.busy) return;
       this.clearError('bms-scan-error');
-      this.$('bms-scan').textContent = 'Сканування…';
+      this.$('bms-scan').textContent = tr('text.scanning');
       this.$('bms-scan').classList.add('is-loading');
       this.$('bms-scan').setAttribute('aria-busy', 'true');
-      this.$('bms-scan-status').textContent = 'Шукаємо сумісні пристрої…';
+      this.$('bms-scan-status').textContent = tr('text.searching_for_compatible_devices');
       this.setBusy(true);
       try {
         const started = await api.startBmsScan();
@@ -680,13 +686,13 @@
         this.bmsScan = snapshot;
         this.renderBmsCandidates(snapshot.candidates || []);
         this.$('bms-scan-status').textContent = snapshot.candidates?.length
-          ? `Знайдено: ${snapshot.candidates.length}`
-          : 'JK BMS не знайдено';
+          ? tr('setup.found_count', { count: snapshot.candidates.length })
+          : tr('text.jk_bms_not_found');
       } catch (error) {
         this.$('bms-scan-status').textContent = '';
         this.showError('bms-scan-error', errorText(error));
       } finally {
-        this.$('bms-scan').textContent = 'Оновити список BMS';
+        this.$('bms-scan').textContent = tr('text.refresh_bms_list');
         this.$('bms-scan').classList.remove('is-loading');
         this.$('bms-scan').removeAttribute('aria-busy');
         this.setBusy(false);
@@ -699,7 +705,7 @@
       if (!Array.isArray(candidates) || !candidates.length) {
         const empty = document.createElement('div');
         empty.className = 'setup-note';
-        empty.textContent = 'Сумісну JK BMS не знайдено. Переконайтеся, що Bluetooth BMS доступний.';
+        empty.textContent = tr('text.no_compatible_jk_bms_found_make_sure_bms_bluetooth_is_avai');
         root.appendChild(empty);
         return;
       }
@@ -711,6 +717,7 @@
         button.type = 'button';
         button.className = 'setup-candidate';
         button.setAttribute('role', 'radio');
+        button.setAttribute('data-i18n-ignore', '');
         button.setAttribute('aria-checked', 'false');
         button.setAttribute(
           'aria-label',
@@ -720,17 +727,19 @@
         const info = document.createElement('div');
         const title = document.createElement('div');
         title.className = 'setup-candidate-title';
+        title.setAttribute('data-i18n-ignore', '');
         title.textContent = candidate.name || 'JK BMS';
         const meta = document.createElement('div');
         meta.className = 'setup-candidate-meta';
-        meta.textContent = candidate.address_hint || 'Адреса прихована';
+        meta.setAttribute('data-i18n-ignore', '');
+        meta.textContent = candidate.address_hint || tr('text.address_hidden');
         info.append(title, meta);
 
         const signal = document.createElement('div');
         signal.className = 'setup-candidate-signal';
         signal.textContent = Number.isFinite(candidate.rssi_dbm)
           ? `${candidate.rssi_dbm} dBm`
-          : 'Обрати';
+          : tr('text.select');
 
         button.append(info, signal);
         button.addEventListener('click', () => this.selectBms(candidate));
@@ -770,7 +779,7 @@
       } catch (error) {
         this.showStep('bms-validating');
         this.showError('bms-validation-error', errorText(error));
-        this.$('bms-validation-status').textContent = 'Перевірка не завершена';
+        this.$('bms-validation-status').textContent = tr('text.verification_incomplete');
         this.$('bms-validation-retry').classList.remove('is-hidden');
         this.$('bms-validation-skip').classList.remove('is-hidden');
       } finally {
@@ -782,7 +791,8 @@
       this.applyStatus(status);
       this.showStep('success');
 
-      this.$('success-wifi').textContent = status?.wifi?.ssid || 'Підключено';
+      this.$('success-wifi').toggleAttribute('data-i18n-ignore', Boolean(status?.wifi?.ssid));
+      this.$('success-wifi').textContent = status?.wifi?.ssid || tr('text.connected');
       const bmsLabel = [
         status?.bms?.name,
         status?.bms?.model,
@@ -790,18 +800,24 @@
       ].filter(Boolean).join(' · ');
       const deferred = status?.setup_completed_without_bms === true &&
         status?.bms?.configured !== true;
+      this.$('success-bms').setAttribute('data-i18n-ignore', '');
       this.$('success-bms').textContent = deferred
-        ? 'Не підключено — можна додати пізніше'
+        ? tr('text.not_connected_you_can_add_it_later')
         : (bmsLabel || 'JK BMS');
       this.$('success-description').textContent = deferred
-        ? 'Wi-Fi налаштовано. Мережа налаштування закриється за кілька секунд. Відкрийте WattPost у домашній мережі: підключити BMS можна в «Налаштуваннях пристрою».'
-        : 'Мережа налаштування закриється за кілька секунд. Підключіться до домашнього Wi-Fi та відкрийте панель WattPost.';
+        ? tr('text.wi_fi_configured_the_setup_network_will_close_shortly_open')
+        : tr('text.the_setup_network_will_close_shortly_connect_to_your_home');
 
       const ip = status?.wifi?.ip || '';
+      // Preserve the explicit UA/EN selection when leaving the setup AP
+      // for another origin (bms.local or the assigned LAN IP).
+      const lang = global.WattPostI18n?.language;
+      const languageQuery = lang === 'en' || lang === 'uk' ? '?lang=' + lang : '';
+      this.$('success-local').href = 'http://bms.local/' + languageQuery;
       const fallback = this.$('success-ip');
       if (ip) {
-        fallback.href = `http://${ip}/`;
-        fallback.textContent = `Відкрити http://${ip}/`;
+        fallback.href = `http://${ip}/` + languageQuery;
+        fallback.textContent = tr('setup.open_ip', { url: `http://${ip}/` });
         fallback.classList.remove('is-hidden');
       } else {
         fallback.removeAttribute('href');

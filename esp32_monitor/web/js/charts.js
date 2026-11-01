@@ -141,18 +141,18 @@
 
   function formatTimeShort(t) {
     const d = new Date(t);
-    return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString((typeof WattPostI18n !== 'undefined' && WattPostI18n.language === 'en' ? 'en-US' : 'uk-UA'), { hour: '2-digit', minute: '2-digit' });
   }
 
   function formatDateTimeShort(t) {
     const d = new Date(t);
-    return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }) +
-      ' • ' + d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
+    return d.toLocaleTimeString((typeof WattPostI18n !== 'undefined' && WattPostI18n.language === 'en' ? 'en-US' : 'uk-UA'), { hour: '2-digit', minute: '2-digit' }) +
+      ' • ' + d.toLocaleDateString((typeof WattPostI18n !== 'undefined' && WattPostI18n.language === 'en' ? 'en-US' : 'uk-UA'), { day: 'numeric', month: 'short' });
   }
 
   function formatDateShort(t) {
     const d = new Date(t);
-    return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
+    return d.toLocaleDateString((typeof WattPostI18n !== 'undefined' && WattPostI18n.language === 'en' ? 'en-US' : 'uk-UA'), { day: 'numeric', month: 'short' });
   }
 
   function getAdaptiveDecimals(ticks, fallbackDecimals = 0) {

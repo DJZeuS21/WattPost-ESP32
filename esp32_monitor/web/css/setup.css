@@ -660,3 +660,27 @@ a {
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* First Setup uses a separate stylesheet from the Dashboard. Keep the language
+   selector visible without relying on Cloud, external CSS or an internet link. */
+.setup-brand .language-picker { display: inline-flex; align-items: center; margin-left: auto; flex: 0 0 auto; }
+.setup-brand .language-switch {
+  appearance: none;
+  min-height: 34px;
+  min-width: 40px;
+  padding: 4px 6px;
+  border: 1px solid var(--setup-border);
+  border-radius: 8px;
+  background: var(--setup-panel-2);
+  color: var(--setup-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+.setup-brand .language-switch:focus-visible {
+  outline: 2px solid var(--setup-focus);
+  outline-offset: 2px;
+}

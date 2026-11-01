@@ -101,6 +101,7 @@
     _resetCache: () => { _resolvedLogoPromise = null; }
   };
 
+  const tr = (key, values) => global.WattPostI18n.t(key, values);
   const VALID_TABS = new Set(['dashboard', 'history', 'settings', 'bms-settings']);
 
   function parseHash() {
@@ -139,6 +140,12 @@
       // Resolve and apply brand logo & favicon
       applyBrandLogo();
       this._initRuntimeContext();
+      // Preserve the mutable trailing text node used by the live BMS badge.
+      // No DOM-wide translation observer is needed for its initial placeholder.
+      const bmsBadge = document.getElementById('bms-online');
+      if (bmsBadge?.lastChild?.nodeType === 3) {
+        bmsBadge.lastChild.nodeValue = ' ' + tr('dashboard.waiting_for_bms');
+      }
 
       // Hide all views, show the active one
       this._setTab(this.tab, false);
@@ -182,8 +189,8 @@
 
       if (brandLink) {
         brandLink.href = '/account?list=1';
-        brandLink.title = 'До панелі WattPost';
-        brandLink.setAttribute('aria-label', 'WattPost — до панелі пристроїв');
+        brandLink.title = tr('text.go_to_wattpost_dashboard');
+        brandLink.setAttribute('aria-label', tr('text.wattpost_go_to_device_list'));
       }
 
       // Cloud-only context: the current device stays on screen while the user
@@ -192,9 +199,11 @@
       switcher.className = 'runtime-device-switch';
       const toggle = document.createElement('summary');
       toggle.className = 'runtime-switch-trigger';
-      toggle.title = 'Швидке перемикання WattPost';
-      toggle.setAttribute('aria-label', 'Усі пристрої, відкрити список');
-      toggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h7"/></svg><span class="tab-label">Усі пристрої</span>';
+      toggle.setAttribute('data-i18n-ignore', ''); // Active device name is user-defined.
+      toggle.title = tr('text.quick_wattpost_switch');
+      toggle.setAttribute('aria-label', tr('text.all_devices_open_list'));
+      toggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h7"/></svg><span class="tab-label"></span>';
+      toggle.querySelector('.tab-label').textContent = tr('text.all_devices');
       const counter = document.createElement('span');
       counter.className = 'runtime-device-count';
       counter.textContent = '…';
@@ -208,13 +217,13 @@
       popup.className = 'runtime-device-menu';
       const menuTitle = document.createElement('p');
       menuTitle.className = 'runtime-device-menu-title';
-      menuTitle.textContent = 'Завантажуємо пристрої…';
+      menuTitle.textContent = tr('text.loading_devices');
       const menuList = document.createElement('div');
       menuList.className = 'runtime-device-menu-list';
       const manageLink = document.createElement('a');
       manageLink.className = 'runtime-device-manage';
       manageLink.href = '/account?list=1';
-      manageLink.textContent = 'Усі пристрої та назви →';
+      manageLink.textContent = tr('text.all_devices_and_names');
       popup.append(menuTitle, menuList, manageLink);
       switcher.append(toggle, popup);
 
@@ -224,11 +233,11 @@
         loadedDevices = devices;
         const online = devices.filter(device => device.online === true).length;
         const active = devices.find(device => device.cloud_id === currentCloudId);
-        const currentName = active?.name || 'Усі пристрої';
+        const currentName = active?.name || tr('text.all_devices');
         toggle.querySelector('.tab-label').textContent = currentName;
         counter.textContent = `${online}/${devices.length}`;
-        toggle.setAttribute('aria-label', `${currentName}: ${online} онлайн із ${devices.length}, відкрити список`);
-        menuTitle.textContent = `${online} онлайн із ${devices.length}`;
+        toggle.setAttribute('aria-label', tr('app.devices_switch_aria', { name: currentName, online, total: devices.length }));
+        menuTitle.textContent = tr('app.devices_online_count', { online, total: devices.length });
         menuList.replaceChildren();
         devices.forEach(device => {
           const current = device.cloud_id === currentCloudId;
@@ -238,14 +247,15 @@
           if (current) link.setAttribute('aria-current', 'page');
           const label = document.createElement('span');
           label.className = 'runtime-device-option-name';
+          label.setAttribute('data-i18n-ignore', ''); // User-defined device name.
           label.textContent = device.name || 'WattPost';
           const statusText = document.createElement('span');
           statusText.className = device.online ? 'online' : 'offline';
-          statusText.textContent = device.online ? 'Онлайн' : 'Не в мережі';
+          statusText.textContent = device.online ? tr('text.online') : tr('text.offline');
           link.append(label, statusText);
           menuList.append(link);
         });
-        if (!devices.length) menuTitle.textContent = 'Немає прив’язаних пристроїв';
+        if (!devices.length) menuTitle.textContent = tr('text.no_linked_devices');
       }
       async function loadDevices() {
         try {
@@ -255,9 +265,9 @@
         } catch (_error) {
           if (!loadedDevices) {
             counter.textContent = '—';
-            menuTitle.textContent = 'Не вдалося завантажити пристрої';
+            menuTitle.textContent = tr('text.could_not_load_devices');
           } else {
-            menuTitle.textContent = 'Не вдалося оновити список · ' + menuTitle.textContent;
+            menuTitle.textContent = tr('app.devices_refresh_error', { status: menuTitle.textContent });
           }
         }
       }
@@ -278,9 +288,10 @@
       const logoutButton = document.createElement('button');
       logoutButton.className = 'runtime-logout-button';
       logoutButton.type = 'button';
-      logoutButton.title = 'Вийти';
-      logoutButton.setAttribute('aria-label', 'Вийти');
-      logoutButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></svg><span class="tab-label">Вийти</span>';
+      logoutButton.title = tr('auth.sign_out');
+      logoutButton.setAttribute('aria-label', tr('auth.sign_out'));
+      logoutButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></svg><span class="tab-label"></span>';
+      logoutButton.querySelector('.tab-label').textContent = tr('auth.sign_out');
       logoutButton.addEventListener('click', async () => {
         logoutButton.disabled = true;
         try {
@@ -297,13 +308,14 @@
 
       global.ApiClient.fetchAccountContext().then(account => {
         if (account?.email) {
-          toggle.title = `Усі пристрої · ${account.email}`;
+          toggle.title = tr('app.devices_title_email', { email: account.email });
         }
       }).catch(() => {});
     }
 
     _renderBmsStatus(data, state) {
       const badge = document.getElementById('bms-online');
+      badge?.setAttribute('data-i18n-ignore', ''); // Raw BMS model is not a translation key.
       if (!badge) return;
       const stale = state === 'STALE' || data?.is_stale === true;
       const offline = !data || data.online !== true ||
@@ -323,20 +335,22 @@
       const model = (Number.isFinite(count) && count > 0 ? `${count}S · ` : '') + (data?.model || 'BMS');
       const cloud = data?.remote === true || global.ApiClient?.runtimeContext?.mode === 'cloud';
       const cloudUnavailable = cloud && ['STALE', 'PROLONGED_OFFLINE'].includes(state);
-      const offlineLabel = cloud && data?.device_online === false ? 'WattPost не в мережі'
-        : state === 'BMS_OFFLINE' || data?.bms_connected === false ? 'BMS не підключена' : 'Немає зв’язку';
-      badge.lastChild.nodeValue = ' ' + (cloudUnavailable ? 'Немає зв’язку з Cloud'
-        : offline ? offlineLabel : stale ? (cloud && !data.has_last_fresh_battery ? 'Очікуємо дані BMS' : 'Останні відомі дані') : model);
+      const offlineLabel = cloud && data?.device_online === false ? tr('text.wattpost_is_offline')
+        : state === 'BMS_OFFLINE' || data?.bms_connected === false ? tr('text.bms_disconnected_f25973') : tr('text.no_connection');
+      badge.lastChild.nodeValue = ' ' + (cloudUnavailable ? tr('text.cloud_unavailable')
+        : offline ? offlineLabel : stale ? (cloud && !data.has_last_fresh_battery ? tr('dashboard.waiting_for_bms') : tr('text.last_known_data')) : model);
     }
 
     _renderRuntimeStatus(data, state) {
+      const locale = global.WattPostI18n.language === 'en' ? 'en-US' : 'uk-UA';
       const banner = document.getElementById('runtime-status-banner');
+      banner?.setAttribute('data-i18n-ignore', ''); // Explicit keys handle status messages.
       const cloud = data?.remote === true || global.ApiClient?.runtimeContext?.mode === 'cloud';
       if (!banner || !cloud) return;
 
       let message = '';
       if (state === 'STALE' || state === 'PROLONGED_OFFLINE') {
-        message = 'Немає зв’язку з WattPost Cloud. Поточний стан пристрою не підтверджено.';
+        message = tr('text.cannot_reach_wattpost_cloud_current_device_status_is_uncon');
       } else if (data.device_online !== true) {
         const receivedAt = data.has_last_fresh_battery
           ? data.last_fresh_battery_received_at
@@ -344,33 +358,33 @@
         if (data.has_last_fresh_battery && receivedAt) {
           const received = new Date(receivedAt);
           const timestamp = Number.isNaN(received.getTime())
-            ? 'невідомого часу'
-            : received.toLocaleString('uk-UA');
-          message = `WattPost не в мережі. Показано останні відомі значення батареї від ${timestamp}.`;
+            ? tr('text.unknown_time')
+            : received.toLocaleString(locale);
+          message = tr('app.runtime_offline_last_data', { timestamp });
         } else if (data.has_snapshot && data.telemetry_received_at) {
-          message = 'WattPost не в мережі. Свіжих даних батареї для цього підключення ще немає.';
+          message = tr('text.wattpost_is_offline_there_is_no_fresh_battery_data_for_thi');
         } else {
-          message = 'WattPost не в мережі. Телеметрія від пристрою ще не надходила.';
+          message = tr('text.wattpost_is_offline_no_telemetry_has_been_received_yet');
         }
       } else if (data.has_snapshot && (data.telemetry_fresh !== true || state === 'STALE')) {
         const date = data.last_fresh_battery_received_at || data.telemetry_received_at;
         const timestamp = date && !Number.isNaN(new Date(date).getTime())
-          ? ` від ${new Date(date).toLocaleString('uk-UA')}` : '';
-        message = `WattPost онлайн, але збережена телеметрія застаріла. Показано останні відомі значення${timestamp}.`;
+          ? tr('app.runtime_timestamp_from', { time: new Date(date).toLocaleString(locale) }) : '';
+        message = tr('app.runtime_online_snapshot_stale', { timestamp });
       } else if (data.bms_connected === true && data.bms_data_fresh !== true) {
         if (data.has_last_fresh_battery && data.last_fresh_battery_received_at) {
           const received = new Date(data.last_fresh_battery_received_at);
           const timestamp = Number.isNaN(received.getTime())
-            ? 'невідомого часу'
-            : received.toLocaleString('uk-UA');
-          message = `WattPost онлайн, але телеметрія BMS застаріла. Показано останні відомі значення батареї від ${timestamp}.`;
+            ? tr('text.unknown_time')
+            : received.toLocaleString(locale);
+          message = tr('app.runtime_online_bms_stale_at', { timestamp });
         } else {
-          message = 'WattPost онлайн, але телеметрія BMS застаріла. Свіжих значень батареї ще немає.';
+          message = tr('text.wattpost_is_online_but_bms_telemetry_is_stale_no_fresh_bat');
         }
       } else if (data.bms_connected === false) {
-        message = 'WattPost онлайн, але BMS зараз не підключена.';
+        message = tr('text.wattpost_is_online_but_bms_is_not_connected');
       } else if (!data.has_snapshot) {
-        message = 'WattPost онлайн. Очікуємо першу телеметрію.';
+        message = tr('text.wattpost_is_online_waiting_for_first_telemetry');
       }
 
       banner.textContent = message;
@@ -426,7 +440,7 @@
         const capabilities = global.ApiClient?.getCapabilities?.() || {};
         if (capabilities.historyRead === false) {
           if (!this._unavailableTabs.has(tab)) {
-            this._showUnavailable(histView, 'Історія', 'Віддалена історія стане доступною після синхронізації записів WattPost у Cloud.');
+            this._showUnavailable(histView, tr('nav.history'), tr('text.remote_history_will_be_available_after_wattpost_synchroniz'));
             this._unavailableTabs.add(tab);
           }
         } else if (!this.history) {
@@ -442,7 +456,7 @@
         const capabilities = global.ApiClient?.getCapabilities?.() || {};
         if (capabilities.bmsSettingsRead === false) {
           if (!this._unavailableTabs.has(tab)) {
-            this._showUnavailable(bmsSetView, 'Налаштування BMS', 'Віддалене читання налаштувань BMS поки недоступне.');
+            this._showUnavailable(bmsSetView, tr('nav.bms_settings'), tr('text.remote_bms_settings_are_not_available_yet'));
             this._unavailableTabs.add(tab);
           }
         } else if (!this.bmsSettings) {

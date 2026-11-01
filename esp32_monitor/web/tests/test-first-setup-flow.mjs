@@ -295,6 +295,7 @@ test('First Setup browser flow reaches Success through real UI actions', async (
   const debugPort = 9364;
   const chrome = spawn('google-chrome', [
     '--headless=new',
+    '--lang=uk-UA',
     `--remote-debugging-port=${debugPort}`,
     '--disable-gpu',
     '--no-sandbox',
@@ -326,6 +327,10 @@ test('First Setup browser flow reaches Success through real UI actions', async (
       ws.send(JSON.stringify({ id, method, params }));
     });
 
+    await send('Runtime.evaluate', {
+      expression: "localStorage.setItem('wattpost.language', 'uk')",
+    });
+    await send('Page.reload', { ignoreCache: true });
     await waitFor(
       send,
       `document.querySelector('[data-step="welcome"]').classList.contains('is-active')`,
@@ -521,8 +526,8 @@ test('First Setup browser flow reaches Success through real UI actions', async (
     const snapshot = result.result.value;
     assert.equal(snapshot.wifi, 'Lab WiFi');
     assert.match(snapshot.bms, /JK-BMS/);
-    assert.equal(snapshot.localHref, 'http://bms.local/');
-    assert.equal(snapshot.fallbackHref, 'http://192.168.1.77/');
+    assert.equal(snapshot.localHref, 'http://bms.local/?lang=uk');
+    assert.equal(snapshot.fallbackHref, 'http://192.168.1.77/?lang=uk');
     assert.equal(snapshot.passwordValue, '');
 
     const posts = requests.filter(request => request.method === 'POST');
@@ -557,6 +562,7 @@ test('First Setup can finish without BMS and survive a browser reload', async ()
   const debugPort = 9365;
   const chrome = spawn('google-chrome', [
     '--headless=new',
+    '--lang=uk-UA',
     `--remote-debugging-port=${debugPort}`,
     '--disable-gpu',
     '--no-sandbox',
@@ -585,6 +591,10 @@ test('First Setup can finish without BMS and survive a browser reload', async ()
       ws.send(JSON.stringify({ id, method, params }));
     });
 
+    await send('Runtime.evaluate', {
+      expression: "localStorage.setItem('wattpost.language', 'uk')",
+    });
+    await send('Page.reload', { ignoreCache: true });
     await waitFor(send, `document.querySelector('[data-step="bms"]').classList.contains('is-active')`);
     await send('Runtime.evaluate', {
       expression: `document.getElementById('bms-skip').click()`,

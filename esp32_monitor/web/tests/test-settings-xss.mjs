@@ -9,6 +9,7 @@ const expected = '&lt;img src=x onerror=alert(1)&gt;';
 
 function view() {
   const browser = {
+    WattPostI18n: { language: 'uk', t: key => key, tLocale: () => 'Capacity' },
     SettingsNormalizer: {
       formatUptime() { return payload; },
       formatValue() { return {text: payload, unit: payload, secondaryText: payload}; },
@@ -42,7 +43,7 @@ test('BMS text in settings summary is encoded, never rendered as HTML', () => {
 
 test('formatted BMS setting strings are encoded in rows', () => {
   const {instance} = view();
-  const spec = {section:'battery', key:'capacity', labelUk:'Ємність', labelEn:'Capacity', type:'text'};
+  const spec = {section:'battery', key:'capacity', labelKey:'bms.parameter.battery.nominal_capacity_ah', type:'text'};
   const html = instance._renderSettingRow(spec, {}, {
     resolveValue() { return payload; },
     formatValue() { return {text:payload, secondaryText:payload, unit:payload}; }

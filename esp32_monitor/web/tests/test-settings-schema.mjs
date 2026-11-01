@@ -6,8 +6,16 @@ import vm from 'node:vm';
 
 test('SettingsSchema and SettingsNormalizer integrity and 100% key coverage', async () => {
   const code = await readFile(new URL('../js/settings-schema.js', import.meta.url), 'utf8');
-  const context = { window: {} };
+  const context = { window: {
+    navigator: { language: 'uk-UA', languages: ['uk-UA'] },
+    location: { search: '' },
+    localStorage: { getItem: () => 'uk', setItem() {} },
+  }, URLSearchParams };
   vm.createContext(context);
+  for (const filename of ['i18n.js', 'i18n-uk.js', 'i18n-en.js']) {
+    vm.runInContext(await readFile(new URL('../js/' + filename, import.meta.url), 'utf8'), context);
+    if (filename === 'i18n.js') context.WattPostI18n = context.window.WattPostI18n;
+  }
   vm.runInContext(code, context);
 
   const { SETTINGS_SECTIONS, SETTINGS_SCHEMA, SettingsNormalizer } = context.window;
@@ -63,8 +71,9 @@ test('SettingsSchema and SettingsNormalizer integrity and 100% key coverage', as
   for (const key of realApiKeys) {
     const spec = SETTINGS_SCHEMA.find(s => s.key === key);
     assert.ok(spec, `Schema must contain specification for key: ${key}`);
-    assert.ok(spec.labelUk, `Key ${key} must have Ukrainian label`);
-    assert.ok(spec.labelEn, `Key ${key} must have English reference`);
+    assert.equal(spec.labelKey, 'bms.parameter.' + key);
+    assert.notEqual(context.WattPostI18n.tLocale('uk', spec.labelKey), spec.labelKey);
+    assert.notEqual(context.WattPostI18n.tLocale('en', spec.labelKey), spec.labelKey);
   }
 
   // Verify temperature sub-groups

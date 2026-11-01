@@ -10,6 +10,11 @@
   // Shared zoom-preserving chart update (implemented in charts.js — single source;
   // local copies of this logic previously drifted between dashboard and history).
   const updateChartPreservingZoom = global.WattCharts.updateChartPreservingZoom;
+  const tr = (key, values) => global.WattPostI18n.t(key, values);
+  // Device-provided sensor labels are data, not translation keys or HTML.
+  const escapeHtml = value => String(value).replace(/[&<>"']/g, char =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+  const sensorLabel = sensor => sensor.nameKey ? tr(sensor.nameKey) : sensor.name;
 
   const SPREAD_WARN_STORAGE_KEY = 'wattpost_spread_warning_threshold_mv';
   const DEFAULT_SPREAD_WARN_MV = 15;
@@ -41,17 +46,17 @@
     if (!Number.isFinite(hours) || hours < 0) return null;
     const totalMins = Math.round(hours * 60);
     if (totalMins < 60) {
-      return `${totalMins} хв`;
+      return tr('dashboard.eta_minutes', { minutes: totalMins });
     }
     if (totalMins < 24 * 60) {
       const h = Math.floor(totalMins / 60);
       const m = totalMins % 60;
-      return m > 0 ? `${h} год ${m} хв` : `${h} год`;
+      return m > 0 ? tr('dashboard.eta_hours_minutes', { hours: h, minutes: m }) : tr('dashboard.eta_hours', { hours: h });
     }
     const totalHours = Math.round(hours);
     const d = Math.floor(totalHours / 24);
     const remH = totalHours % 24;
-    return remH > 0 ? `${d} д ${remH} год` : `${d} д`;
+    return remH > 0 ? tr('dashboard.eta_days_hours', { days: d, hours: remH }) : tr('dashboard.eta_days', { days: d });
   }
 
   function computeDirectionalEta(state, data, smoothedCurrent) {
@@ -70,13 +75,13 @@
       const isFullyCharged = isFull || (hasCapacity && neededAh <= 0);
 
       if (isFullyCharged) {
-        return 'Заряджено';
+        return tr('text.charged');
       }
       if (smoothedCurrent > 0.05 && hasCapacity) {
         const hoursToFull = neededAh / smoothedCurrent;
         const totalMins = Math.round(hoursToFull * 60);
         if (totalMins <= 0) {
-          return 'Заряджено';
+          return tr('text.charged');
         }
         const etaText = formatEta(hoursToFull);
         return etaText ? `≈ ${etaText}` : '';
@@ -397,7 +402,7 @@
       }
 
       if (!data || !data.online) {
-        this._renderOfflineState(data ? data.message : 'Немає зв’язку з BMS');
+        this._renderOfflineState();
         return;
       }
 
@@ -418,7 +423,7 @@
         if (this.liveData && this.liveData.online) {
           this._renderLiveState(this.liveData);
         } else {
-          this._renderOfflineState('Немає зв’язку з BMS');
+          this._renderOfflineState(tr('text.no_bms_connection'));
         }
         return;
       }
@@ -435,12 +440,12 @@
 
     _updateHistoryAvailabilityLabel() {
       const hasHistory = this.historyRecords.length > 0;
-      let text = 'останні 24 год';
-      if (hasHistory && this.historyState === 'STALE') text = 'збережена історія · дані можуть бути неповними';
+      let text = tr('text.last_24_hours');
+      if (hasHistory && this.historyState === 'STALE') text = tr('text.saved_history_data_may_be_incomplete');
       if (!hasHistory) {
         text = this._historyLoadingActive || this.historyState === 'INITIAL_LOADING'
-          ? 'завантаження історії…'
-          : 'історія недоступна';
+          ? tr('text.loading_history_881c4c')
+          : tr('text.history_unavailable_939376');
       }
 
       ['charging-panel', 'discharging-panel', 'temperature-panel'].forEach(id => {
@@ -450,7 +455,7 @@
       });
     }
 
-    _renderOfflineState(message) {
+    _renderOfflineState() {
       const colors = STATE_COLORS_LOOKUP['idle'];
 
       // Update ambient spot
@@ -2593,7 +2598,7 @@
       if (!grid) return;
 
       if (!cellData || !cellData.valid || !cellData.list.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#8b949e;padding:20px;">Немає валідних даних комірок</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#8b949e;padding:20px;">' + tr('dashboard.cells_unavailable') + '</div>';
         grid.style.maxWidth = '';
         const spreadBadgeVal = document.querySelector('#spread-badge .spread-value');
         if (spreadBadgeVal) spreadBadgeVal.textContent = 'Δ —';
@@ -2690,7 +2695,7 @@
       // Spread status badge
       const isWarn = spreadMv != null && spreadMv > this.spreadWarningThresholdMv;
       const diagColor = isWarn ? '#d29922' : '#58a6ff';
-      const statusLabel = isWarn ? 'Попередження' : 'Норма';
+      const statusLabel = isWarn ? tr('text.warning') : tr('text.normal');
 
       const badge = document.getElementById('spread-badge');
       if (badge) {
@@ -2726,7 +2731,7 @@
       if (!grid) return;
 
       if (!Array.isArray(sensors) || !sensors.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#8b949e;padding:14px;">Немає активних датчиків температури</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#8b949e;padding:14px;">' + tr('dashboard.temperatures_unavailable') + '</div>';
         return;
       }
 
@@ -2744,17 +2749,17 @@
           card.innerHTML = `
             <div class="sensor-head">
               <span class="sensor-dot" style="background:${s.color}; color:${s.color};"></span>
-              <span class="sensor-name">${s.name}</span>
+              <span class="sensor-name" data-i18n-ignore>${escapeHtml(sensorLabel(s))}</span>
             </div>
             <div class="sensor-value-row">
               <div class="sensor-value"><span class="sensor-current">${s.val_c.toFixed(1)}</span><small class="sensor-unit">°C</small></div>
               <div class="sensor-minmax">
                 <div class="sensor-minmax-col">
-                  <span class="sensor-minmax-label">мін</span>
+                  <span class="sensor-minmax-label">${tr('dashboard.min_abbrev')}</span>
                   <strong class="sensor-min">—</strong>
                 </div>
                 <div class="sensor-minmax-col">
-                  <span class="sensor-minmax-label">макс</span>
+                  <span class="sensor-minmax-label">${tr('dashboard.max_abbrev')}</span>
                   <strong class="sensor-max">—</strong>
                 </div>
               </div>
@@ -2803,7 +2808,7 @@
             <div class="chart-tooltip-time">${global.WattCharts.formatDateTimeShort(pt.t * 1000)}</div>
             <div class="chart-tooltip-row">
               <span class="chart-tooltip-dot" style="background:#56d364;"></span>
-              <span><strong style="color:#e6edf3;">Потужність: ${(pt.chargePower || 0).toFixed(1)} W</strong></span>
+              <span><strong style="color:#e6edf3;">${tr('dashboard.power_w', { power: (pt.chargePower || 0).toFixed(1) })}</strong></span>
             </div>
           `;
         }
@@ -2834,7 +2839,7 @@
             <div class="chart-tooltip-time">${global.WattCharts.formatDateTimeShort(pt.t * 1000)}</div>
             <div class="chart-tooltip-row">
               <span class="chart-tooltip-dot" style="background:#9d8dff;"></span>
-              <span><strong style="color:#e6edf3;">Потужність: ${(pt.dischargePower || 0).toFixed(1)} W</strong></span>
+              <span><strong style="color:#e6edf3;">${tr('dashboard.power_w', { power: (pt.dischargePower || 0).toFixed(1) })}</strong></span>
             </div>
           `;
         }
@@ -2862,7 +2867,7 @@
             return `
               <div class="chart-tooltip-row">
                 <span class="chart-tooltip-dot" style="background:${s.color};"></span>
-                <span style="color:#8b949e;">${s.name}</span>
+                <span style="color:#8b949e;">${escapeHtml(sensorLabel(s))}</span>
                 <strong style="color:#e6edf3; margin-left: auto;">${valStr}</strong>
               </div>
             `;
@@ -2898,7 +2903,7 @@
                 y: this.spreadWarningThresholdMv, 
                 color: 'rgba(210,153,34,0.45)', 
                 dash: [4, 4], 
-                label: `${this.spreadWarningThresholdMv} mV (Попередження)`, 
+                label: tr('dashboard.warning_threshold', { threshold: this.spreadWarningThresholdMv }),
                 borderColor: 'rgba(210,153,34,0.4)', 
                 textColor: '#d29922' 
               }
@@ -2914,13 +2919,13 @@
           const val = pt.spread_mv;
           const isWarn = val > this.spreadWarningThresholdMv;
           const statusText = isWarn 
-            ? `Попередження (>${this.spreadWarningThresholdMv}mV)` 
-            : `Норма (≤${this.spreadWarningThresholdMv}mV)`;
+            ? tr('dashboard.warning_above', { threshold: this.spreadWarningThresholdMv })
+            : tr('dashboard.normal_below', { threshold: this.spreadWarningThresholdMv });
           const statusColor = isWarn ? '#d29922' : '#58a6ff';
           return `
             <div class="chart-tooltip-time">${global.WattCharts.formatDateTimeShort(pt.t * 1000)}</div>
             <div class="chart-tooltip-row">
-              <strong style="color:#e6edf3;">Розкид: ${val} mV</strong>
+              <strong style="color:#e6edf3;">${tr('dashboard.spread_mv', { value: val })}</strong>
               <span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;color:${statusColor};background:${statusColor}18;">${statusText}</span>
             </div>
           `;
@@ -2953,10 +2958,10 @@
         value(prefix + '-energy', measured ? (stats.wattHours / 1000).toFixed(1) : '—');
         value(prefix + '-avg', measured ? `${Math.round(stats.average)} W` : '—');
         value(prefix + '-peak', measured ? `${Math.round(stats.peak)} W` : '—');
-        value(prefix + '-time', measured ? `${Math.floor(stats.seconds / 3600)}г ${Math.floor(stats.seconds % 3600 / 60)}хв` : '—');
+        value(prefix + '-time', measured ? tr('dashboard.hours_minutes_compact', { hours: Math.floor(stats.seconds / 3600), minutes: Math.floor(stats.seconds % 3600 / 60) }) : '—');
         value(prefix + '-yesterday', confirmedYesterday && yStats.validIntervals
           ? `${(yStats.wattHours / 1000).toFixed(1)} kWh`
-          : status?.limited ? 'Неповний день' : this._historyLoadingActive ? 'Завантаження…' : '—');
+          : status?.limited ? tr('text.incomplete_day') : this._historyLoadingActive ? tr('text.loading') : '—');
       }
 
       // Zoom-preserving chart updates go through the shared WattCharts helper

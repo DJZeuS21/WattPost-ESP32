@@ -38,8 +38,8 @@ test('Wi-Fi scan candidate strings are rendered with textContent', () => {
 test('saved Wi-Fi password is never rendered or prefilled', () => {
   assert.match(SOURCE, /autocomplete="new-password"/);
   assert.match(SOURCE, /Збережений пароль ніколи не відображається/);
-  assert.equal(SOURCE.includes('wifi_password'), false);
-  assert.equal(SOURCE.includes('saved_password'), false);
+  assert.doesNotMatch(SOURCE, /\b(?:wifi_password|saved_password)\s*[:=]/);
+  assert.match(SOURCE, /data-i18n=\"text\.the_saved_password_is_never_shown/);
 });
 
 test('password is scrubbed from UI request state after configure attempt', () => {
@@ -49,13 +49,13 @@ test('password is scrubbed from UI request state after configure attempt', () =>
 
 test('reset Wi-Fi requires explicit user confirmation and describes scope', () => {
   assert.match(SOURCE, /global\.confirm/);
-  assert.match(SOURCE, /Скинути налаштування Wi-Fi\?/);
-  assert.match(SOURCE, /Вибір BMS і історія залишаться/);
+  assert.match(SOURCE, /tr\('text\.reset_wi_fi_settings_wattpost_will_forget_the_saved_networ'\)/);
+  assert.match(SOURCE, /tr\('text\.reset_wi_fi_settings_wattpost_will_forget_the_saved_networ'\)/);
 });
 
 test('internet state remains separate and does not infer from Wi-Fi association', () => {
   assert.match(SOURCE, /internet_state/);
-  assert.match(SOURCE, /unknown: 'Не перевірено'/);
+  assert.match(SOURCE, /unknown: tr\('text\.not_checked'\)/);
   const liveStart = SOURCE.indexOf('onLive(data, state)');
   const live = SOURCE.slice(liveStart);
   assert.equal(

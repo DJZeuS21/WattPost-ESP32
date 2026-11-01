@@ -6,11 +6,15 @@
   'use strict';
 
   const { makeAreaChart, makePieChart, hideTooltip, dismissPinnedChart, updateChartPreservingZoom } = global.WattCharts;
+  const tr = (key, values) => global.WattPostI18n.t(key, values);
+  const escapeHtml = value => String(value).replace(/[&<>"']/g, char =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+  const sensorLabel = sensor => sensor.nameKey ? tr(sensor.nameKey) : sensor.name;
 
   const METRIC_GROUPS = [
-    { key: 'electric',    label: 'Електрика',   icon: '⚡' },
-    { key: 'cells',       label: 'Комірки',     icon: '🔋' },
-    { key: 'temperature', label: 'Температури', icon: '🌡️' }
+    { key: 'electric',    label: tr('text.electrical'),   icon: '⚡' },
+    { key: 'cells',       label: tr('text.cells'),     icon: '🔋' },
+    { key: 'temperature', label: tr('battery.temperatures'), icon: '🌡️' }
   ];
 
   class HistoryView {
@@ -95,20 +99,20 @@
         let label;
         if (s.phase === 'period') {
           if (total > 0 && s.pages > 0 && s.pages <= total) {
-            label = `Дозавантаження ${s.days} днів · стор. ${s.pages} з ${total}`;
+            label = tr('history.loading_pages_total', { days: s.days, page: s.pages, total });
             fillPct = Math.max(4, Math.min(95, Math.round((s.pages / total) * 100)));
           } else if (s.pages > 0) {
             // Data is sparser than the 1-page-per-day estimate — keep going
-            label = `Дозавантаження ${s.days} днів · стор. ${s.pages}`;
+            label = tr('history.loading_pages', { days: s.days, page: s.pages });
             fillPct = 95;
           } else {
-            label = `Дозавантаження ${s.days} днів…`;
+            label = tr('history.loading_days', { days: s.days });
             fillPct = 4;
           }
         } else if (s.phase === 'initial') {
-          label = 'Завантаження історії…';
+          label = tr('text.loading_history');
         } else {
-          label = 'Оновлення історії…';
+          label = tr('text.refreshing_history');
         }
         if (chip) {
           const wasHidden = chip.hidden;
@@ -128,13 +132,13 @@
       } else {
         const prev = this._lastActiveLoadingState;
         const issue = s.outcome === 'failed' || this.historyState === 'STALE'
-          ? (this.rawHistory?.length ? 'Збережені дані · неповна історія' : 'Історія недоступна')
-          : s.outcome === 'paused' ? 'Завантаження призупинено'
-          : s.outcome === 'limited' ? (this.rawHistory?.length ? 'Доступна лише частина періоду' : 'Записів ще немає') : '';
+          ? (this.rawHistory?.length ? tr('text.saved_data_incomplete_history') : tr('text.history_unavailable'))
+          : s.outcome === 'paused' ? tr('text.loading_paused')
+          : s.outcome === 'limited' ? (this.rawHistory?.length ? tr('text.only_part_of_the_period_is_available') : tr('text.no_records_yet')) : '';
         if (issue && chip) {
           chip.hidden = false;
           chip.classList.add('history-load-chip--notice');
-          chip.title = s.outcome === 'failed' ? 'Догрузка не завершена. Підтверджені дані збережено; повторимо спробу після відновлення зв’язку.' : issue;
+          chip.title = s.outcome === 'failed' ? tr('text.loading_incomplete_confirmed_records_were_saved_will_retry') : issue;
           chip.classList.remove('history-load-chip--done', 'history-load-chip--out');
           this._swapChipText(chip, text, issue, false);
           if (bar) bar.classList.remove('is-active');
@@ -142,7 +146,7 @@
         } else if (s.outcome === 'complete' && prev && prev.phase === 'period' && prev.pages > 0 && chip && !chip.hidden) {
           // Brief completion flash: popped checkmark + full bar + record
           // count, then the chip gracefully collapses away.
-          this._swapChipText(chip, text, `Готово · ${prev.records} ${this._recordPlural(prev.records)}`, false);
+          this._swapChipText(chip, text, tr('history.done_records', { count: prev.records, unit: this._recordPlural(prev.records) }), false);
           if (fill) { fill.hidden = false; fill.style.width = '100%'; }
           chip.classList.add('history-load-chip--done');
           if (bar) bar.classList.remove('is-active');
@@ -257,12 +261,10 @@
       return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
-    /** Ukrainian plural: 1 запис / 2-4 записи / 5+ записів */
+    /** Locale-aware record plural, independent of source language. */
     _recordPlural(n) {
-      const n10 = n % 10, n100 = n % 100;
-      if (n10 === 1 && n100 !== 11) return 'запис';
-      if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return 'записи';
-      return 'записів';
+      const category = new Intl.PluralRules(global.WattPostI18n.language).select(n);
+      return tr('history.records_' + category);
     }
 
     updateHistory(historyRecords, state) {
@@ -340,19 +342,20 @@
         sensors = Array.from(foundSensorIds).map(id => ({
           id,
           name: CANON_NAMES[id] || id.toUpperCase(),
+          nameKey: global.DataNormalizer?.SENSOR_NAME_KEY_MAP?.[id] || null,
           color: CANON_COLORS[id] || FALLBACK_PALETTE[colorIdx++ % FALLBACK_PALETTE.length]
         }));
       }
 
       const metrics = [
-        { key: 'power',       family: 'power',        group: 'electric',    label: 'Потужність батареї',   shortLabel: 'Потужність', unit: 'W',  color: '#56d364', decimals: 0 },
-        { key: 'voltage',     family: 'pack_voltage', group: 'electric',    label: 'Загальна напруга',     shortLabel: 'Напруга',    unit: 'V',  color: '#79c0ff', decimals: 2 },
-        { key: 'current',     family: 'current',      group: 'electric',    label: 'Струм батареї',        shortLabel: 'Струм',      unit: 'A',  color: '#9d8dff', decimals: 1 },
-        { key: 'soc',         family: 'soc',          group: 'electric',    label: 'Рівень заряду (SoC)',  shortLabel: 'SoC',        unit: '%',  color: '#58a6ff', decimals: 1 },
-        { key: 'cellSpread',  family: 'cell_spread',  group: 'cells',       label: 'Розкид комірок',       shortLabel: 'Розкид',      unit: 'mV', color: '#d29922', decimals: 0 },
-        { key: 'minCell',     family: 'cell_voltage', group: 'cells',       label: 'Мін. напруга комірки', shortLabel: 'Мін. V',      unit: 'V',  color: '#f85149', decimals: 3 },
-        { key: 'maxCell',     family: 'cell_voltage', group: 'cells',       label: 'Макс. напруга комірки',shortLabel: 'Макс. V',     unit: 'V',  color: '#58a6ff', decimals: 3 },
-        { key: 'summaryTemp', family: 'temperature',  group: 'temperature', label: 'Температура батареї (сер.)', shortLabel: 'Батарея (сер.)', unit: '°C', color: '#58A6FF', decimals: 1 }
+        { key: 'power',       family: 'power',        group: 'electric',    label: tr('text.battery_power'),   shortLabel: tr('text.power'), unit: 'W',  color: '#56d364', decimals: 0 },
+        { key: 'voltage',     family: 'pack_voltage', group: 'electric',    label: tr('text.pack_voltage'),     shortLabel: tr('battery.voltage'),    unit: 'V',  color: '#79c0ff', decimals: 2 },
+        { key: 'current',     family: 'current',      group: 'electric',    label: tr('text.battery_current'),        shortLabel: tr('battery.current'),      unit: 'A',  color: '#9d8dff', decimals: 1 },
+        { key: 'soc',         family: 'soc',          group: 'electric',    label: tr('text.state_of_charge_soc_96f349'),  shortLabel: 'SoC',        unit: '%',  color: '#58a6ff', decimals: 1 },
+        { key: 'cellSpread',  family: 'cell_spread',  group: 'cells',       label: tr('battery.cell_spread'),       shortLabel: tr('text.imbalance_84cfbf'),      unit: 'mV', color: '#d29922', decimals: 0 },
+        { key: 'minCell',     family: 'cell_voltage', group: 'cells',       label: tr('text.min_cell_voltage'), shortLabel: tr('text.min_v'),      unit: 'V',  color: '#f85149', decimals: 3 },
+        { key: 'maxCell',     family: 'cell_voltage', group: 'cells',       label: tr('text.max_cell_voltage'),shortLabel: tr('text.max_v_23d77d'),     unit: 'V',  color: '#58a6ff', decimals: 3 },
+        { key: 'summaryTemp', family: 'temperature',  group: 'temperature', label: tr('text.battery_temperature_avg'), shortLabel: tr('text.battery_avg'), unit: '°C', color: '#58A6FF', decimals: 1 }
       ];
 
       sensors.forEach(s => {
@@ -360,8 +363,8 @@
           key: `sensor_${s.id}`,
           family: 'temperature',
           group: 'temperature',
-          label: s.name,
-          shortLabel: s.name,
+          label: sensorLabel(s),
+          shortLabel: sensorLabel(s),
           unit: '°C',
           color: s.color,
           decimals: 1,
@@ -384,6 +387,7 @@
       for (const m of groupMetrics) {
         const btn = document.createElement('button');
         btn.className = 'metric-pill' + (this.selectedMetric === m.key ? ' is-active' : '');
+        if (m.sensorId) btn.setAttribute('data-i18n-ignore', ''); // Sensor names are data.
         btn.textContent = m.shortLabel;
         if (this.selectedMetric === m.key) {
           btn.style.color = m.color;
@@ -426,7 +430,7 @@
     }
 
     _updatePeriodLabel() {
-      const labels = { today: 'Сьогодні', '24h': '24 год', '7d': '7 днів', '14d': '14 днів' };
+      const labels = { today: tr('text.today'), '24h': tr('text.24_hours'), '7d': tr('text.7_days'), '14d': tr('text.14_days') };
       const el = document.getElementById('mode-period-label');
       if (el) el.textContent = labels[this.period];
     }
@@ -512,8 +516,8 @@
           if (!pt) return '';
           return `
             <div class="chart-tooltip-time">${global.WattCharts.formatDateTimeShort(pt.t * 1000)}</div>
-            <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#56d364;"></span><span>Заряджання: <strong style="color:#e6edf3;">${(pt.chargePower || 0)} W</strong></span></div>
-            <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#9d8dff;"></span><span>Розряджання: <strong style="color:#e6edf3;">${(pt.dischargePower || 0)} W</strong></span></div>
+            <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#56d364;"></span><span>${tr('history.tooltip_charging')} <strong style="color:#e6edf3;">${(pt.chargePower || 0)} W</strong></span></div>
+            <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#9d8dff;"></span><span>${tr('history.tooltip_discharging')} <strong style="color:#e6edf3;">${(pt.dischargePower || 0)} W</strong></span></div>
           `;
         }
       });
@@ -539,16 +543,16 @@
           if (!pt) return '';
           return `
             <div class="chart-tooltip-time">${global.WattCharts.formatDateTimeShort(pt.t * 1000)}</div>
-            <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#58a6ff;"></span><span>Рівень заряду: <strong style="color:#e6edf3;">${(pt.s != null ? pt.s : 0)}%</strong></span></div>
+            <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#58a6ff;"></span><span>${tr('history.tooltip_soc')} <strong style="color:#e6edf3;">${(pt.s != null ? pt.s : 0)}%</strong></span></div>
           `;
         }
       });
 
       // Mode split donut
       this.modeChart = makePieChart(document.getElementById('history-mode-chart'), [
-        { name: 'Заряджання', value: 0, color: '#56d364' },
-        { name: 'Розряджання', value: 0, color: '#9d8dff' },
-        { name: 'Очікування', value: 0, color: '#30363d' }
+        { name: tr('battery.charging'), value: 0, color: '#56d364' },
+        { name: tr('battery.discharging'), value: 0, color: '#9d8dff' },
+        { name: tr('text.idle'), value: 0, color: '#30363d' }
       ]);
 
       // Detail chart
@@ -577,7 +581,7 @@
             <div class="chart-tooltip-time">${global.WattCharts.formatDateTimeShort(pt.t * 1000)}</div>
             <div class="chart-tooltip-row">
               <span class="chart-tooltip-dot" style="background:${m.color};"></span>
-              <span style="color:#8b949e;">${m.label}:</span>
+              <span style="color:#8b949e;">${escapeHtml(m.label)}:</span>
               <strong style="color:#e6edf3; margin-left: auto;">${valStr}</strong>
             </div>
           `;
@@ -634,15 +638,15 @@
       const listContainer = document.getElementById('mode-list');
       const periodLabel = document.getElementById('mode-period-label');
       if (periodLabel) {
-        periodLabel.textContent = this.period === 'today' ? 'Сьогодні' : this.period === '24h' ? '24 год' : this.period === '7d' ? '7 днів' : '14 днів';
+        periodLabel.textContent = this.period === 'today' ? tr('text.today') : this.period === '24h' ? tr('text.24_hours') : this.period === '7d' ? tr('text.7_days') : tr('text.14_days');
       }
 
       if (!data || !global.DataNormalizer.energyStats(data, 'charging').validIntervals) {
         if (listContainer) {
           const emptyModes = [
-            { name: 'Заряджання', pct: null, hours: '—', color: '#56d364' },
-            { name: 'Розряджання', pct: null, hours: '—', color: '#9d8dff' },
-            { name: 'Очікування', pct: null, hours: '—', color: '#484f58' }
+            { name: tr('battery.charging'), pct: null, hours: '—', color: '#56d364' },
+            { name: tr('battery.discharging'), pct: null, hours: '—', color: '#9d8dff' },
+            { name: tr('text.idle'), pct: null, hours: '—', color: '#484f58' }
           ];
           listContainer.innerHTML = emptyModes.map(m => `
             <div class="mode-list-item">
@@ -652,7 +656,7 @@
                   <span class="mode-item-name">${m.name}</span>
                 </div>
                 <div class="mode-item-num">
-                  <strong>${m.pct == null ? '—' : m.pct + '%'}</strong> <span class="mode-item-hours">(${m.hours} год)</span>
+                  <strong>${m.pct == null ? '—' : m.pct + '%'}</strong> <span class="mode-item-hours">${tr('history.mode_hours', { hours: m.hours })}</span>
                 </div>
               </div>
               <div class="mode-item-progress">
@@ -689,9 +693,9 @@
       const idleHours = (idleSec / 3600).toFixed(1);
 
       const modes = [
-        { name: 'Заряджання', pct: chargePct, hours: chargeHours, color: '#56d364' },
-        { name: 'Розряджання', pct: dischargePct, hours: dischargeHours, color: '#9d8dff' },
-        { name: 'Очікування', pct: idlePct, hours: idleHours, color: '#484f58' }
+        { name: tr('battery.charging'), pct: chargePct, hours: chargeHours, color: '#56d364' },
+        { name: tr('battery.discharging'), pct: dischargePct, hours: dischargeHours, color: '#9d8dff' },
+        { name: tr('text.idle'), pct: idlePct, hours: idleHours, color: '#484f58' }
       ];
 
       if (listContainer) {
@@ -703,7 +707,7 @@
                 <span class="mode-item-name">${m.name}</span>
               </div>
               <div class="mode-item-num">
-                <strong>${m.pct == null ? '—' : m.pct + '%'}</strong> <span class="mode-item-hours">(${m.hours} год)</span>
+                <strong>${m.pct == null ? '—' : m.pct + '%'}</strong> <span class="mode-item-hours">${tr('history.mode_hours', { hours: m.hours })}</span>
               </div>
             </div>
             <div class="mode-item-progress">
@@ -816,9 +820,9 @@
 
       if (!records || !records.length) {
         const loading = this._loadingState && this._loadingState.active;
-        container.innerHTML = `<div style="text-align:center;color:#8b949e;padding:16px;font-size:13px;">${loading ? 'Завантаження даних…' : 'Немає історичних даних'}</div>`;
+        container.innerHTML = `<div style="text-align:center;color:#8b949e;padding:16px;font-size:13px;">${loading ? tr('text.loading_data') : tr('text.no_history_data')}</div>`;
         if (countEl) countEl.textContent = '0';
-        if (footerTextEl) footerTextEl.textContent = 'Записів немає';
+        if (footerTextEl) footerTextEl.textContent = tr('text.no_records');
         return;
       }
 
@@ -831,7 +835,7 @@
         dayGroups.get(dayKey).push(r);
       });
 
-      const dayNamesShort = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+      const dayNamesShort = [tr('text.sun'), tr('text.mon'), tr('text.tue'), tr('text.wed'), tr('text.thu'), tr('text.fri'), tr('text.sat')];
       const now = new Date();
       const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const yDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
@@ -855,9 +859,9 @@
         const d = new Date(dayRecords[0].t * 1000);
         let dayLabel = '';
         if (key === todayKey) {
-          dayLabel = 'Сьогодні';
+          dayLabel = tr('text.today');
         } else if (key === yesterdayKey) {
-          dayLabel = 'Вчора';
+          dayLabel = tr('text.yesterday');
         } else {
           dayLabel = dayNamesShort[d.getDay()];
         }
@@ -875,7 +879,7 @@
         row.innerHTML = `
           <div class="daily-row-day">
             <span class="daily-day-label">${dayLabel}</span>
-            <span class="daily-row-date">${dateStr}${partial ? " · частина" : ""}</span>
+            <span class="daily-row-date">${dateStr}${partial ? tr('text.partial') : ""}</span>
           </div>
           <div class="daily-row-inout">
             <span class="daily-row-in">${inKwh}</span>
@@ -891,7 +895,7 @@
       if (countEl) countEl.textContent = String(sortedDayKeys.length);
       if (footerTextEl) {
         footerTextEl.textContent = ['failed', 'paused'].includes(this._loadingState?.outcome)
-          ? 'Догрузка не завершена' : sortedDayKeys.length > 5 ? '↓ Прокрутіть для перегляду' : 'Доступні дні показано';
+          ? tr('text.loading_incomplete') : sortedDayKeys.length > 5 ? tr('text.scroll_to_view') : tr('text.available_days_shown');
       }
     }
 
@@ -900,7 +904,7 @@
       if (!body) return;
 
       const records = this.rawHistory;
-      const dayNames = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+      const dayNames = [tr('text.sun'), tr('text.mon'), tr('text.tue'), tr('text.wed'), tr('text.thu'), tr('text.fri'), tr('text.sat')];
       const now = new Date();
       const rows = [];
 
@@ -991,7 +995,7 @@
           const cellEl = document.createElement('div');
           cellEl.className = 'heatmap-cell';
           cellEl.style.background = getHeatmapColor(c.powerW, c.hasData);
-          cellEl.title = `${r.dateLabel} ${String(c.hour).padStart(2, '0')}:00 — ${c.hasData ? "Навантаження: " + c.powerW + " W" : "немає достатніх вимірювань"}`;
+          cellEl.title = `${r.dateLabel} ${String(c.hour).padStart(2, '0')}:00 — ${c.hasData ? tr('history.heatmap_load', { power: c.powerW }) : tr('text.not_enough_measurements')}`;
           rowEl.appendChild(cellEl);
         });
 

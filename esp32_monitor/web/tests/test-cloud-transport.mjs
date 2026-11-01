@@ -195,9 +195,11 @@ assert.equal(normalized.power_w, -110.9);
 assert.equal(normalized.activity_state, 'unknown', 'offline/stale state suppresses live activity even when the retained battery current is non-zero');
 assert.equal(normalized.temperatures.summary_c, 25);
 assert.deepEqual(normalized.temperatures.sensors.map(sensor => sensor.name), [
-  'Датчик T1', 'Датчик T2', 'MOSFET',
+  'T1', 'T2', 'MOSFET',
 ]);
 assert.equal(normalized.temperatures.sensors.find(sensor => sensor.id === 'mos').role, 'mosfet');
+assert.deepEqual(normalized.temperatures.sensors.map(sensor => sensor.nameKey),
+  ['sensor.t1', 'sensor.t2', null]);
 
 const indexedTieFixture = structuredClone(fixture);
 indexedTieFixture.online = true;

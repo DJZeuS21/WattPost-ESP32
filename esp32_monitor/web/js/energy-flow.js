@@ -20,19 +20,19 @@
       primary: '#56d364',
       glow: 'rgba(86,211,100,0.45)',
       bg: 'rgba(86,211,100,0.06)',
-      label: 'Заряджання'
+      label: global.WattPostI18n?.t('battery.charging') || 'Charging'
     },
     discharging: {
       primary: '#9d8dff',
       glow: 'rgba(157,141,255,0.45)',
       bg: 'rgba(157,141,255,0.06)',
-      label: 'Розряджання'
+      label: global.WattPostI18n?.t('battery.discharging') || 'Discharging'
     },
     idle: {
       primary: '#6e7681',
       glow: 'rgba(110,118,129,0.15)',
       bg: 'rgba(110,118,129,0.04)',
-      label: 'Очікування'
+      label: global.WattPostI18n?.t('text.idle') || 'Idle'
     }
   };
 

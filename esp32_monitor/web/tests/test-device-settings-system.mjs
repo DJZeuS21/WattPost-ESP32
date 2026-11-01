@@ -22,7 +22,7 @@ test('reboot requires explicit confirmation and describes preserved data', () =>
   const end = SOURCE.indexOf('async _factoryResetDevice()', start);
   const reboot = SOURCE.slice(start, end);
   assert.match(reboot, /global\.confirm/);
-  assert.match(reboot, /Налаштування та історія збережуться/);
+  assert.match(reboot, /tr\('text\.restart_wattpost_settings_and_history_will_be_preserved'\)/);
 });
 
 test('full reset explains user-visible data loss and next step', () => {

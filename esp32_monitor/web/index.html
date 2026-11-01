@@ -26,20 +26,25 @@
   <!-- HEADER -->
   <header class="header">
     <div class="brand-group">
-      <a class="brand" id="brand-home-link" href="#dashboard" title="До панелі" aria-label="WattPost — до панелі">
+      <a class="brand" id="brand-home-link" href="#dashboard" title="До панелі" data-i18n-title="text.go_to_dashboard" aria-label="WattPost — до панелі" data-i18n-aria-label="text.wattpost_go_to_dashboard">
         <img id="brand-logo" class="brand-logo" alt="" width="22" height="22" src="assets/logo.svg?v=__WATTPOST_WEB_VERSION__" data-logo-canonical="assets/logo.svg?v=__WATTPOST_WEB_VERSION__" aria-hidden="true" />
         <span class="brand-name">WattPost</span>
       </a>
-      <a class="brand-github-link" href="https://github.com/DJZeuS21/WattPost-ESP32" target="_blank" rel="noopener noreferrer" aria-label="WattPost на GitHub (відкриється в новій вкладці)" title="WattPost на GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .75a11.25 11.25 0 0 0-3.558 21.923c.563.104.768-.244.768-.542 0-.267-.01-.975-.015-1.914-3.13.68-3.79-1.509-3.79-1.509-.512-1.3-1.25-1.646-1.25-1.646-1.023-.7.078-.686.078-.686 1.13.08 1.725 1.16 1.725 1.16 1.005 1.723 2.636 1.225 3.278.937.102-.728.393-1.225.715-1.507-2.498-.284-5.124-1.25-5.124-5.565 0-1.23.44-2.234 1.16-3.022-.116-.285-.503-1.43.11-2.98 0 0 .945-.303 3.095 1.155a10.79 10.79 0 0 1 5.634 0c2.148-1.458 3.091-1.155 3.091-1.155.615 1.55.228 2.695.112 2.98.722.788 1.158 1.792 1.158 3.022 0 4.326-2.63 5.278-5.136 5.556.404.349.764 1.04.764 2.096 0 1.514-.014 2.735-.014 3.106 0 .3.203.65.774.54A11.25 11.25 0 0 0 12 .75Z"/></svg></a>
+      <a class="brand-github-link" href="https://github.com/DJZeuS21/WattPost-ESP32" target="_blank" rel="noopener noreferrer" aria-label="WattPost на GitHub (відкриється в новій вкладці)" data-i18n-aria-label="text.wattpost_on_github_opens_in_a_new_tab" title="WattPost на GitHub" data-i18n-title="text.wattpost_on_github"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .75a11.25 11.25 0 0 0-3.558 21.923c.563.104.768-.244.768-.542 0-.267-.01-.975-.015-1.914-3.13.68-3.79-1.509-3.79-1.509-.512-1.3-1.25-1.646-1.25-1.646-1.023-.7.078-.686.078-.686 1.13.08 1.725 1.16 1.725 1.16 1.005 1.723 2.636 1.225 3.278.937.102-.728.393-1.225.715-1.507-2.498-.284-5.124-1.25-5.124-5.565 0-1.23.44-2.234 1.16-3.022-.116-.285-.503-1.43.11-2.98 0 0 .945-.303 3.095 1.155a10.79 10.79 0 0 1 5.634 0c2.148-1.458 3.091-1.155 3.091-1.155.615 1.55.228 2.695.112 2.98.722.788 1.158 1.792 1.158 3.022 0 4.326-2.63 5.278-5.136 5.556.404.349.764 1.04.764 2.096 0 1.514-.014 2.735-.014 3.106 0 .3.203.65.774.54A11.25 11.25 0 0 0 12 .75Z"/></svg></a>
+      <label class="language-picker" aria-label="Мова / Language">
+        <select class="language-switch" data-language-switch aria-label="Мова / Language">
+          <option value="uk">UA</option><option value="en">EN</option>
+        </select>
+      </label>
     </div>
     <nav class="tabs">
       <button class="tab-btn" data-tab="dashboard" id="tab-dashboard">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="10" width="8" height="11" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/></svg>
-        <span class="tab-label">Панель</span>
+        <span class="tab-label" data-i18n="nav.dashboard">Панель</span>
       </button>
       <button class="tab-btn" data-tab="history" id="tab-history">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 6"/><path d="M3 21h18"/></svg>
-        <span class="tab-label">Історія</span>
+        <span class="tab-label" data-i18n="nav.history">Історія</span>
       </button>
       <button class="tab-btn" data-tab="settings" id="tab-settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -53,12 +58,12 @@
           <line x1="9" y1="8" x2="15" y2="8"></line>
           <line x1="17" y1="16" x2="23" y2="16"></line>
         </svg>
-        <span class="tab-label">Налаштування</span>
+        <span class="tab-label" data-i18n="nav.settings">Налаштування</span>
       </button>
     </nav>
     <div class="header-actions">
       <div id="runtime-context-actions" class="runtime-context-actions" hidden></div>
-      <button class="tab-btn bms-settings-btn" data-tab="bms-settings" id="tab-bms-settings" title="Налаштування BMS" aria-label="Налаштування BMS">
+      <button class="tab-btn bms-settings-btn" data-tab="bms-settings" id="tab-bms-settings" title="Налаштування BMS" data-i18n-title="nav.bms_settings" aria-label="Налаштування BMS" data-i18n-aria-label="nav.bms_settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.16.36.37.7.6 1 .28.3.66.48 1.1.5h.1v4h-.1c-.44.02-.82.2-1.1.5-.23.3-.44.64-.6 1z"></path>
@@ -78,7 +83,7 @@
 
     <!-- ====================== DASHBOARD ====================== -->
     <div class="view view-dashboard" id="view-dashboard">
-      <h1 class="visually-hidden">Моніторинг батареї</h1>
+      <h1 class="visually-hidden" data-i18n="dashboard.title">Моніторинг батареї</h1>
 
       <!-- HERO: Energy flow + Battery -->
       <section class="hero-card" id="hero-card" data-hero-state="idle">
@@ -245,7 +250,7 @@
               <path d="M 2,-12 L -5,-1 L -0.5,-1 L -2,12 L 5,1 L 0.5,1 Z" />
             </g>
             <text id="input-label" x="276" y="228" text-anchor="middle" fill="#8b949e"
-                  style="font-size:14px;font-weight:600;">Заряджання</text>
+                  style="font-size:14px;font-weight:600;" data-i18n="battery.charging">Заряджання</text>
             <text id="input-power" x="276" y="256" text-anchor="middle" dominant-baseline="middle" fill="#484f58"
                   style="font-size:32px;font-weight:800;font-family:monospace;font-variant-numeric:tabular-nums;"><tspan class="watt-number">0</tspan><tspan class="watt-unit" dx="3" font-size="24" font-weight="700">W</tspan></text>
             <g id="input-underglow" class="hero-watt-underglow" style="opacity: 0; pointer-events: none;">
@@ -269,7 +274,7 @@
               <path d="M -1.5,11 L 0,14 L 1.5,11" />
             </g>
             <text id="output-label" x="916" y="233" text-anchor="middle" fill="#8b949e"
-                  style="font-size:14px;font-weight:600;">Навантаження</text>
+                  style="font-size:14px;font-weight:600;" data-i18n="text.load">Навантаження</text>
             <text id="output-power" x="916" y="261" text-anchor="middle" dominant-baseline="middle" fill="#484f58"
                   style="font-size:32px;font-weight:800;font-family:monospace;font-variant-numeric:tabular-nums;"><tspan class="watt-number">0</tspan><tspan class="watt-unit" dx="3" font-size="24" font-weight="700">W</tspan></text>
             <g id="output-underglow" class="hero-watt-underglow" style="opacity: 0; pointer-events: none;">
@@ -362,7 +367,7 @@
           <div class="metric-accent-line"></div>
           <div class="metric-head">
             <div class="metric-icon">V</div>
-            <span class="metric-label">Напруга</span>
+            <span class="metric-label" data-i18n="battery.voltage">Напруга</span>
           </div>
           <div class="metric-value">
             <span class="metric-value-num">—</span>
@@ -373,7 +378,7 @@
           <div class="metric-accent-line"></div>
           <div class="metric-head">
             <div class="metric-icon">Ah</div>
-            <span class="metric-label">Залишок</span>
+            <span class="metric-label" data-i18n="battery.remaining">Залишок</span>
           </div>
           <div class="metric-value">
             <span class="metric-value-num">—</span>
@@ -384,7 +389,7 @@
           <div class="metric-accent-line"></div>
           <div class="metric-head">
             <div class="metric-icon">T</div>
-            <span class="metric-label">Температура</span>
+            <span class="metric-label" data-i18n="battery.temperature">Температура</span>
           </div>
           <div class="metric-value">
             <span class="metric-value-num">—</span>
@@ -395,7 +400,7 @@
           <div class="metric-accent-line"></div>
           <div class="metric-head">
             <div class="metric-icon">dV</div>
-            <span class="metric-label">Розкид комірок</span>
+            <span class="metric-label" data-i18n="battery.cell_spread">Розкид комірок</span>
           </div>
           <div class="metric-value">
             <span class="metric-value-num">—</span>
@@ -407,91 +412,91 @@
 
       <!-- ENERGY PANELS -->
       <div class="panels-stack">
-        <!-- CHARGING PANEL -->
-        <section class="energy-panel charging-panel" id="charging-panel">
-          <div class="panel-head">
-            <h2 class="panel-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#56d364" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2,-12 L-5,-1 L-0.5,-1 L-2,12 L5,1 L0.5,1 Z" transform="translate(12,12)" fill="#56d364" stroke="none" />
-              </svg>
-              Заряджання
-            </h2>
-            <span class="panel-subtext">останні 24 год</span>
-          </div>
-          <div class="panel-grid">
-            <div class="panel-stats">
-              <div class="energy-block" style="border-left: 3px solid #56d364;">
-                <span class="energy-label">Отримано батареєю</span>
-                <strong class="energy-value"><span id="charge-energy">0.0</span><small class="energy-unit">kWh</small></strong>
-              </div>
-              <div class="panel-stat-grid">
-                <div class="stat-block">
-                  <span class="stat-label">Середня потужність</span>
-                  <strong class="stat-value" id="charge-avg">—</strong>
-                </div>
-                <div class="stat-block">
-                  <span class="stat-label">Пікова потужність</span>
-                  <strong class="stat-value" id="charge-peak">—</strong>
-                </div>
-                <div class="stat-block">
-                  <span class="stat-label">Час заряджання</span>
-                  <strong class="stat-value" id="charge-time">—</strong>
-                </div>
-              </div>
-              <div class="yesterday-row">
-                <span class="yesterday-label">Вчора</span>
-                <strong class="yesterday-value" id="charge-yesterday">—</strong>
-              </div>
-            </div>
-            <div class="panel-chart-wrap">
-              <div class="chart-wrapper">
-                <button class="chart-reset-btn" data-chart="charge" type="button" aria-label="Скинути масштаб">↺ Авто</button>
-                <canvas id="charge-chart"></canvas>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- DISCHARGING PANEL -->
         <section class="energy-panel discharging-panel" id="discharging-panel">
           <div class="panel-head">
             <h2 class="panel-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9d8dff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="8" r="6" /><line x1="8" y1="15" x2="16" y2="15" /><line x1="9" y1="18" x2="15" y2="18" /><path d="M10.5,20 L12,22 L13.5,20" />
-              </svg>
+              </svg><span data-i18n="battery.discharging">
               Розряджання
-            </h2>
-            <span class="panel-subtext">останні 24 год</span>
+            </span></h2>
+            <span class="panel-subtext" data-i18n="text.last_24_hours">останні 24 год</span>
           </div>
           <div class="panel-grid">
             <div class="panel-stats">
               <div class="energy-block" style="border-left: 3px solid #9d8dff;">
-                <span class="energy-label">Віддано батареєю</span>
+                <span class="energy-label" data-i18n="text.energy_delivered">Віддано батареєю</span>
                 <strong class="energy-value"><span id="discharge-energy">0.0</span><small class="energy-unit">kWh</small></strong>
               </div>
               <div class="panel-stat-grid">
                 <div class="stat-block">
-                  <span class="stat-label">Середня потужність</span>
+                  <span class="stat-label" data-i18n="text.average_power">Середня потужність</span>
                   <strong class="stat-value" id="discharge-avg">—</strong>
                 </div>
                 <div class="stat-block">
-                  <span class="stat-label">Пікова потужність</span>
+                  <span class="stat-label" data-i18n="text.peak_power">Пікова потужність</span>
                   <strong class="stat-value" id="discharge-peak">—</strong>
                 </div>
                 <div class="stat-block">
-                  <span class="stat-label">Час розряджання</span>
+                  <span class="stat-label" data-i18n="text.discharging_time">Час розряджання</span>
                   <strong class="stat-value" id="discharge-time">—</strong>
                 </div>
               </div>
               <div class="yesterday-row">
-                <span class="yesterday-label">Вчора</span>
+                <span class="yesterday-label" data-i18n="text.yesterday">Вчора</span>
                 <strong class="yesterday-value" id="discharge-yesterday">—</strong>
               </div>
             </div>
             <div class="panel-chart-wrap">
               <div class="chart-wrapper">
-                <button class="chart-reset-btn" data-chart="discharge" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                <button class="chart-reset-btn" data-chart="discharge" type="button" aria-label="Скинути масштаб" data-i18n-aria-label="text.reset_zoom" data-i18n="text.auto">↺ Авто</button>
                 <canvas id="discharge-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CHARGING PANEL -->
+        <section class="energy-panel charging-panel" id="charging-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#56d364" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2,-12 L-5,-1 L-0.5,-1 L-2,12 L5,1 L0.5,1 Z" transform="translate(12,12)" fill="#56d364" stroke="none" />
+              </svg><span data-i18n="battery.charging">
+              Заряджання
+            </span></h2>
+            <span class="panel-subtext" data-i18n="text.last_24_hours">останні 24 год</span>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-stats">
+              <div class="energy-block" style="border-left: 3px solid #56d364;">
+                <span class="energy-label" data-i18n="text.energy_received">Отримано батареєю</span>
+                <strong class="energy-value"><span id="charge-energy">0.0</span><small class="energy-unit">kWh</small></strong>
+              </div>
+              <div class="panel-stat-grid">
+                <div class="stat-block">
+                  <span class="stat-label" data-i18n="text.average_power">Середня потужність</span>
+                  <strong class="stat-value" id="charge-avg">—</strong>
+                </div>
+                <div class="stat-block">
+                  <span class="stat-label" data-i18n="text.peak_power">Пікова потужність</span>
+                  <strong class="stat-value" id="charge-peak">—</strong>
+                </div>
+                <div class="stat-block">
+                  <span class="stat-label" data-i18n="text.charging_time">Час заряджання</span>
+                  <strong class="stat-value" id="charge-time">—</strong>
+                </div>
+              </div>
+              <div class="yesterday-row">
+                <span class="yesterday-label" data-i18n="text.yesterday">Вчора</span>
+                <strong class="yesterday-value" id="charge-yesterday">—</strong>
+              </div>
+            </div>
+            <div class="panel-chart-wrap">
+              <div class="chart-wrapper">
+                <button class="chart-reset-btn" data-chart="charge" type="button" aria-label="Скинути масштаб" data-i18n-aria-label="text.reset_zoom" data-i18n="text.auto">↺ Авто</button>
+                <canvas id="charge-chart"></canvas>
               </div>
             </div>
           </div>
@@ -503,15 +508,15 @@
             <h2 class="panel-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#58A6FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
-              </svg>
+              </svg><span data-i18n="battery.temperatures">
               Температури
-            </h2>
-            <span class="panel-subtext">останні 24 год</span>
+            </span></h2>
+            <span class="panel-subtext" data-i18n="text.last_24_hours">останні 24 год</span>
           </div>
           <div class="sensor-grid" id="sensor-grid"></div>
           <div class="temp-chart-wrap">
             <div class="chart-wrapper">
-              <button class="chart-reset-btn" data-chart="temperature" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+              <button class="chart-reset-btn" data-chart="temperature" type="button" aria-label="Скинути масштаб" data-i18n-aria-label="text.reset_zoom" data-i18n="text.auto">↺ Авто</button>
               <canvas id="temperature-chart"></canvas>
             </div>
           </div>
@@ -524,14 +529,14 @@
               <h2 class="panel-title">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e6edf3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="7" width="14" height="10" rx="1.5" /><path d="M17 10v4" /><path d="M6 9v6M10 9v6M14 9v6" />
-                </svg>
+                </svg><span data-i18n="text.cell_balance">
                 Баланс комірок
-              </h2>
+              </span></h2>
 
             </div>
             <div class="spread-badge" id="spread-badge">
               <span class="spread-dot"></span>
-              <span class="spread-text">Розкид:</span>
+              <span class="spread-text" data-i18n="text.imbalance">Розкид:</span>
               <span class="spread-value">Δ —</span>
             </div>
           </div>
@@ -541,26 +546,26 @@
           <div class="trend-section">
             <div class="trend-head">
               <div class="trend-title-row">
-                <span class="trend-label">Тренд розбіжності</span>
-                <span class="trend-status" id="trend-status">Норма</span>
+                <span class="trend-label" data-i18n="text.imbalance_trend">Тренд розбіжності</span>
+                <span class="trend-status" id="trend-status" data-i18n="text.normal">Норма</span>
               </div>
               <div class="trend-stats">
-                <div><span class="trend-stat-label">ПОТОЧНИЙ: </span><span class="trend-stat-val" id="trend-current">—</span></div>
-                <div><span class="trend-stat-label">МАКС (24г): </span><span class="trend-stat-val-2" id="trend-max">—</span></div>
-                <div class="trend-stat-hidden"><span class="trend-stat-label">СЕРЕДНІЙ: </span><span class="trend-stat-val-2" id="trend-avg">—</span></div>
-                <div class="trend-threshold-ctrl" id="trend-threshold-ctrl" title="Порогове значення розкиду для попередження (1-29 mV)">
-                  <span class="trend-stat-label">ПОРІГ: </span>
+                <div><span class="trend-stat-label" data-i18n="text.current">ПОТОЧНИЙ: </span><span class="trend-stat-val" id="trend-current">—</span></div>
+                <div><span class="trend-stat-label" data-i18n="text.max_24h">МАКС (24г): </span><span class="trend-stat-val-2" id="trend-max">—</span></div>
+                <div class="trend-stat-hidden"><span class="trend-stat-label" data-i18n="text.average">СЕРЕДНІЙ: </span><span class="trend-stat-val-2" id="trend-avg">—</span></div>
+                <div class="trend-threshold-ctrl" id="trend-threshold-ctrl" title="Порогове значення розкиду для попередження (1-29 mV)" data-i18n-title="dashboard.spread_warning_threshold_title">
+                  <span class="trend-stat-label" data-i18n="text.threshold">ПОРІГ: </span>
                   <div class="threshold-stepper">
-                    <button class="stepper-btn" id="btn-spread-threshold-dec" aria-label="Зменшити поріг розкиду">−</button>
+                    <button class="stepper-btn" id="btn-spread-threshold-dec" aria-label="Зменшити поріг розкиду" data-i18n-aria-label="text.decrease_imbalance_threshold">−</button>
                     <span class="stepper-val" id="spread-threshold-val">15 mV</span>
-                    <button class="stepper-btn" id="btn-spread-threshold-inc" aria-label="Збільшити поріг розкиду">+</button>
+                    <button class="stepper-btn" id="btn-spread-threshold-inc" aria-label="Збільшити поріг розкиду" data-i18n-aria-label="text.increase_imbalance_threshold">+</button>
                   </div>
                 </div>
               </div>
             </div>
             <div class="trend-chart-wrap">
               <div class="chart-wrapper">
-                <button class="chart-reset-btn" data-chart="trend" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                <button class="chart-reset-btn" data-chart="trend" type="button" aria-label="Скинути масштаб" data-i18n-aria-label="text.reset_zoom" data-i18n="text.auto">↺ Авто</button>
                 <canvas id="trend-chart"></canvas>
               </div>
             </div>
@@ -582,16 +587,16 @@
             </svg>
           </div>
           <div>
-            <h1 class="history-title">Історія роботи батареї</h1>
-            <p class="history-subtitle">Аналітика заряду, розряду, температур та балансу за період</p>
+            <h1 class="history-title" data-i18n="text.battery_history">Історія роботи батареї</h1>
+            <p class="history-subtitle" data-i18n="text.charging_discharging_temperature_and_balance_trends_over_t">Аналітика заряду, розряду, температур та балансу за період</p>
           </div>
         </div>
         <div class="history-header-right">
           <div class="period-selector" id="period-selector">
-            <button class="period-btn" data-period="today">Сьогодні</button>
-            <button class="period-btn is-active" data-period="24h">24 год</button>
-            <button class="period-btn" data-period="7d">7 днів</button>
-            <button class="period-btn" data-period="14d">14 днів</button>
+            <button class="period-btn" data-period="today" data-i18n="text.today">Сьогодні</button>
+            <button class="period-btn is-active" data-period="24h" data-i18n="text.24_hours">24 год</button>
+            <button class="period-btn" data-period="7d" data-i18n="text.7_days">7 днів</button>
+            <button class="period-btn" data-period="14d" data-i18n="text.14_days">14 днів</button>
           </div>
           <div class="history-load-chip" id="history-load-chip" hidden role="status">
             <span class="history-load-chip-fill" id="history-load-fill" hidden aria-hidden="true"></span>
@@ -602,7 +607,7 @@
             <svg class="history-load-check" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            <span class="history-load-text" id="history-load-text">Завантаження…</span>
+            <span class="history-load-text" id="history-load-text" data-i18n="text.loading">Завантаження…</span>
           </div>
         </div>
       </div>
@@ -612,7 +617,7 @@
         <div class="summary-card">
           <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(86,211,100,0.4), transparent);"></div>
           <div class="summary-head">
-            <span class="summary-label">Отримано батареєю</span>
+            <span class="summary-label" data-i18n="text.energy_received">Отримано батареєю</span>
             <div class="summary-icon" style="background:#56d36415;color:#56d364;border:1px solid #56d36430;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M2,-12 L-5,-1 L-0.5,-1 L-2,12 L5,1 L0.5,1 Z" transform="translate(12,12)" fill="#56d364" stroke="none" />
@@ -627,7 +632,7 @@
         <div class="summary-card">
           <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(157,141,255,0.4), transparent);"></div>
           <div class="summary-head">
-            <span class="summary-label">Віддано батареєю</span>
+            <span class="summary-label" data-i18n="text.energy_delivered">Віддано батареєю</span>
             <div class="summary-icon" style="background:#9d8dff15;color:#9d8dff;border:1px solid #9d8dff30;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="8" r="6" /><line x1="8" y1="15" x2="16" y2="15" /><line x1="9" y1="18" x2="15" y2="18" /><path d="M10.5,20 L12,22 L13.5,20" />
@@ -642,7 +647,7 @@
         <div class="summary-card">
           <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(88,166,255,0.4), transparent);"></div>
           <div class="summary-head">
-            <span class="summary-label">Діапазон рівня заряду</span>
+            <span class="summary-label" data-i18n="text.state_of_charge_range">Діапазон рівня заряду</span>
             <div class="summary-icon" style="background:#58a6ff15;color:#58a6ff;border:1px solid #58a6ff30;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="7" width="16" height="10" rx="2" /><line x1="22" y1="11" x2="22" y2="13" />
@@ -661,16 +666,16 @@
         <div class="summary-card">
           <div class="summary-accent-line" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
           <div class="summary-head">
-            <span class="summary-label">Пікова потужність</span>
+            <span class="summary-label" data-i18n="text.peak_power">Пікова потужність</span>
             <div class="summary-icon summary-icon-neutral">⚡</div>
           </div>
           <div class="summary-peak-grid">
             <div>
-              <span class="peak-label">ЗАРЯД</span>
+              <span class="peak-label" data-i18n="text.charge">ЗАРЯД</span>
               <span class="peak-value peak-charge">+<span id="summary-peak-charge">0</span> <small>W</small></span>
             </div>
             <div>
-              <span class="peak-label">РОЗРЯД</span>
+              <span class="peak-label" data-i18n="text.discharge">РОЗРЯД</span>
               <span class="peak-value peak-discharge">-<span id="summary-peak-discharge">0</span> <small>W</small></span>
             </div>
           </div>
@@ -684,28 +689,28 @@
             <div class="history-card-head">
               <div class="history-card-title-row">
                 <div class="icon-badge icon-blue">⚡</div>
-                <h2>Потужність і рівень заряду</h2>
+                <h2 data-i18n="text.power_and_state_of_charge">Потужність і рівень заряду</h2>
               </div>
               <div class="history-legend">
-                <span class="legend-item"><span class="legend-dot" style="background:#56d364;"></span> Заряд (W)</span>
-                <span class="legend-item"><span class="legend-dot" style="background:#9d8dff;"></span> Розряд (W)</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#56d364;"></span><span data-i18n="text.charging_w"> Заряд (W)</span></span>
+                <span class="legend-item"><span class="legend-dot" style="background:#9d8dff;"></span><span data-i18n="text.discharging_w"> Розряд (W)</span></span>
                 <span class="legend-item"><span class="legend-dot" style="background:#58a6ff;"></span> SoC (%)</span>
               </div>
             </div>
             <div class="power-chart-section">
-              <div class="chart-axis-label">ПОТУЖНІСТЬ (W)</div>
+              <div class="chart-axis-label" data-i18n="text.power_w">ПОТУЖНІСТЬ (W)</div>
               <div class="power-chart-wrap">
                 <div class="chart-wrapper">
-                  <button class="chart-reset-btn" data-chart="history-power" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                  <button class="chart-reset-btn" data-chart="history-power" type="button" aria-label="Скинути масштаб" data-i18n-aria-label="text.reset_zoom" data-i18n="text.auto">↺ Авто</button>
                   <canvas id="history-power-chart"></canvas>
                 </div>
               </div>
             </div>
             <div class="soc-chart-section">
-              <div class="chart-axis-label">РІВЕНЬ ЗАРЯДУ (SOC %)</div>
+              <div class="chart-axis-label" data-i18n="text.state_of_charge_soc">РІВЕНЬ ЗАРЯДУ (SOC %)</div>
               <div class="soc-chart-wrap">
                 <div class="chart-wrapper">
-                  <button class="chart-reset-btn" data-chart="history-soc" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+                  <button class="chart-reset-btn" data-chart="history-soc" type="button" aria-label="Скинути масштаб" data-i18n-aria-label="text.reset_zoom" data-i18n="text.auto">↺ Авто</button>
                   <canvas id="history-soc-chart"></canvas>
                 </div>
               </div>
@@ -717,18 +722,18 @@
           <div class="mode-card-body">
             <div class="mode-head">
               <div class="icon-badge icon-green">⏱</div>
-              <h2>Режими роботи</h2>
+              <h2 data-i18n="text.operating_modes">Режими роботи</h2>
             </div>
             <div class="mode-pie-wrap">
               <canvas id="history-mode-chart"></canvas>
               <div class="mode-pie-center">
-                <span class="mode-pie-label">ПЕРІОД</span>
-                <span class="mode-pie-value" id="mode-period-label">24 год</span>
+                <span class="mode-pie-label" data-i18n="text.period">ПЕРІОД</span>
+                <span class="mode-pie-value" id="mode-period-label" data-i18n="text.24_hours">24 год</span>
               </div>
             </div>
             <div class="mode-list" id="mode-list"></div>
           </div>
-          <div class="mode-footer">Розподіл розраховано за струмом навантаження</div>
+          <div class="mode-footer" data-i18n="text.calculated_from_load_current">Розподіл розраховано за струмом навантаження</div>
         </section>
       </div>
 
@@ -738,25 +743,25 @@
           <div class="detail-head">
             <div class="detail-title-row">
               <div class="icon-badge icon-blue">📊</div>
-              <h2>Детальний аналіз метрик</h2>
+              <h2 data-i18n="text.detailed_metric_analysis">Детальний аналіз метрик</h2>
             </div>
             <div class="metric-stats-row">
-              <div class="metric-stat-pill"><span class="metric-stat-pill-label">МІН:</span><span class="metric-stat-pill-val" id="detail-min">0</span></div>
-              <div class="metric-stat-pill"><span class="metric-stat-pill-label">СЕР:</span><span class="metric-stat-pill-val-blue" id="detail-avg">0</span></div>
-              <div class="metric-stat-pill"><span class="metric-stat-pill-label">МАКС:</span><span class="metric-stat-pill-val" id="detail-max">0</span></div>
+              <div class="metric-stat-pill"><span class="metric-stat-pill-label" data-i18n="text.min">МІН:</span><span class="metric-stat-pill-val" id="detail-min">0</span></div>
+              <div class="metric-stat-pill"><span class="metric-stat-pill-label" data-i18n="text.avg">СЕР:</span><span class="metric-stat-pill-val-blue" id="detail-avg">0</span></div>
+              <div class="metric-stat-pill"><span class="metric-stat-pill-label" data-i18n="text.max">МАКС:</span><span class="metric-stat-pill-val" id="detail-max">0</span></div>
             </div>
           </div>
           <div class="metric-groups">
             <div class="metric-group-tabs" id="metric-group-tabs">
-              <button class="group-tab is-active" data-group="electric"><span class="group-icon">⚡</span>Електрика</button>
-              <button class="group-tab" data-group="cells"><span class="group-icon">🔋</span>Комірки</button>
-              <button class="group-tab" data-group="temperature"><span class="group-icon">🌡️</span>Температури</button>
+              <button class="group-tab is-active" data-group="electric"><span class="group-icon">⚡</span><span data-i18n="text.electrical">Електрика</span></button>
+              <button class="group-tab" data-group="cells"><span class="group-icon">🔋</span><span data-i18n="text.cells">Комірки</span></button>
+              <button class="group-tab" data-group="temperature"><span class="group-icon">🌡️</span><span data-i18n="battery.temperatures">Температури</span></button>
             </div>
             <div class="metric-pills" id="metric-pills"></div>
           </div>
           <div class="detail-chart-wrap">
             <div class="chart-wrapper">
-              <button class="chart-reset-btn" data-chart="history-detail" type="button" aria-label="Скинути масштаб">↺ Авто</button>
+              <button class="chart-reset-btn" data-chart="history-detail" type="button" aria-label="Скинути масштаб" data-i18n-aria-label="text.reset_zoom" data-i18n="text.auto">↺ Авто</button>
               <canvas id="history-detail-chart"></canvas>
             </div>
           </div>
@@ -767,21 +772,21 @@
             <div class="daily-head">
               <div class="daily-title-row">
                 <div class="icon-badge icon-blue">📅</div>
-                <h2>По днях</h2>
+                <h2 data-i18n="text.by_day">По днях</h2>
               </div>
-              <span class="daily-aggregation">АГРЕГАЦІЯ</span>
+              <span class="daily-aggregation" data-i18n="text.aggregated">АГРЕГАЦІЯ</span>
             </div>
             <div class="daily-grid daily-grid-header">
-              <span>ДЕНЬ</span>
-              <span class="daily-center">ЗАРЯД / РОЗРЯД</span>
-              <span class="daily-center">МІН. ЗАРЯД</span>
-              <span class="daily-center">МАКС. ΔV</span>
+              <span data-i18n="text.day">ДЕНЬ</span>
+              <span class="daily-center" data-i18n="text.charge_discharge">ЗАРЯД / РОЗРЯД</span>
+              <span class="daily-center" data-i18n="text.min_charge">МІН. ЗАРЯД</span>
+              <span class="daily-center" data-i18n="text.max_v">МАКС. ΔV</span>
             </div>
             <div class="daily-list" id="daily-list"></div>
           </div>
           <div class="daily-footer">
-            <span id="daily-footer-text">Усі дні показано</span>
-            <span>Днів: <strong id="daily-count">0</strong></span>
+            <span id="daily-footer-text" data-i18n="text.all_days_shown">Усі дні показано</span>
+            <span><span data-i18n="text.days">Днів: </span><strong id="daily-count">0</strong></span>
           </div>
         </section>
       </div>
@@ -792,9 +797,9 @@
           <div class="heatmap-title-block">
             <div class="heatmap-title-row">
               <div class="icon-badge icon-blue">▦</div>
-              <h2>Профіль навантаження (14 днів)</h2>
+              <h2 data-i18n="text.load_profile_14_days">Профіль навантаження (14 днів)</h2>
             </div>
-            <p class="heatmap-subtitle">Розподіл середньої потужності по годинах доби (00:00 — 23:00)</p>
+            <p class="heatmap-subtitle" data-i18n="text.average_power_by_time_of_day_00_0023_00">Розподіл середньої потужності по годинах доби (00:00 — 23:00)</p>
           </div>
           <div class="heatmap-legend">
             <span class="legend-text">0 W</span>
@@ -820,6 +825,9 @@
   <div class="chart-tooltip" id="chart-tooltip"></div>
 
   <!-- Scripts (loaded in dependency order) -->
+  <script src="js/i18n.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/i18n-uk.js?v=__WATTPOST_WEB_VERSION__"></script>
+  <script src="js/i18n-en.js?v=__WATTPOST_WEB_VERSION__"></script>
   <script src="vendor/chart.umd.js?v=__WATTPOST_WEB_VERSION__"></script>
   <script src="vendor/hammer.min.js?v=__WATTPOST_WEB_VERSION__"></script>
   <script src="vendor/chartjs-plugin-zoom.umd.min.js?v=__WATTPOST_WEB_VERSION__"></script>

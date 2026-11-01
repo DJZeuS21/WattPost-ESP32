@@ -23,6 +23,9 @@ EXPECTED_FILES = {
     "js/transport.js.gz",
     "js/api.js.gz",
     "js/app.js.gz",
+    "js/i18n.js.gz",
+    "js/i18n-uk.js.gz",
+    "js/i18n-en.js.gz",
     "js/battery-colors.js.gz",
     "js/charts.js.gz",
     "js/dashboard.js.gz",
@@ -50,6 +53,9 @@ EXPECTED_ROUTES = {
     "/js/transport.js": ["js/transport.js.gz", "text/javascript; charset=utf-8"],
     "/js/api.js": ["js/api.js.gz", "text/javascript; charset=utf-8"],
     "/js/app.js": ["js/app.js.gz", "text/javascript; charset=utf-8"],
+    "/js/i18n.js": ["js/i18n.js.gz", "text/javascript; charset=utf-8"],
+    "/js/i18n-uk.js": ["js/i18n-uk.js.gz", "text/javascript; charset=utf-8"],
+    "/js/i18n-en.js": ["js/i18n-en.js.gz", "text/javascript; charset=utf-8"],
     "/js/battery-colors.js": ["js/battery-colors.js.gz", "text/javascript; charset=utf-8"],
     "/js/charts.js": ["js/charts.js.gz", "text/javascript; charset=utf-8"],
     "/js/dashboard.js": ["js/dashboard.js.gz", "text/javascript; charset=utf-8"],
@@ -139,7 +145,7 @@ class ProductionWebBundleTest(unittest.TestCase):
                     )
                     self.assertEqual(unpacked, expected_source.read_bytes())
 
-            self.assertLess(total_size, 250_000)
+            self.assertLess(total_size, 285_000)
 
     def test_static_assets_do_not_use_immutable_cache_without_hashed_urls(self):
         server_source = (PROJECT_ROOT / "main" / "main.c").read_text()

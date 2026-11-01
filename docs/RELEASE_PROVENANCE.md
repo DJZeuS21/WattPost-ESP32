@@ -1,5 +1,30 @@
 # WattPost ESP32 — release provenance and verification
 
+## V20.0.3 (2026-11-01)
+
+- **Firmware/web version:** `V20.0.3`, with explicit Ukrainian/English
+  localization for the ESP32 local interface and First Setup (925 matching
+  translation keys). The Dashboard places Discharging above Charging.
+- **Exact private canonical source commit / embedded build ID:**
+  `d2b76a65d2fe`. The public source export has its own Git commit ID;
+  it must not be confused with the signed firmware's `build_id`.
+- **Signed application-only Cloud OTA:** 1,580,384 bytes, SHA-256
+  `e397663c0d919d6a17a5a35bb619dccf33ef6d92add2ea88f0ee1b34f1de865b`.
+  An offline ECDSA-P256 detached signature over the canonical manifest was
+  verified against the ESP32-embedded verification key. The OTA BIN is *not*
+  the complete USB installer.
+- **USB full-installation image:** 1,711,456 bytes, SHA-256
+  `d8afef0a9522201ba432e07e0745c2c3cbd9eb0bc18b5cd7fb16318c888899eb`,
+  ready to flash at offset `0x0` on classic ESP32 with at least 4 MB Flash.
+  Offsets `0x1000`, `0x8000`, `0xF000`, `0x20000` match the exact tested
+  bootloader, partition table, initial OTA data, and app components.
+- **Release acceptance:** 223 host/C tests, 6 proxy tests, 218 Web tests,
+  a single exact ESP-IDF 5.5.5 clean release build, 27 embedded production
+  assets, unchanged partition layout and 320,160 bytes free in the minimum
+  OTA partition. Physical install success must be verified from device
+  telemetry after signed OTA is offered; release publication alone is not
+  evidence of installation.
+
 ## V20.0.2 (2026-11-01)
 
 - **Firmware/web version:** `V20.0.2`, with a compact GitHub link beside the

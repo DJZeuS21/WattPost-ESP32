@@ -104,11 +104,11 @@ test('First Setup scans only after an explicit user action', () => {
 });
 
 test('First Setup progress uses one continuous evenly spaced track', () => {
-  assert.match(HTML, /data-progress="welcome"><span>1<\/span><b>Початок<\/b>/);
+  assert.match(HTML, /data-progress="welcome"><span>1<\/span><b(?: data-i18n="setup\.start")?>Початок<\/b>/);
   assert.match(HTML, /data-progress="wifi"><span>2<\/span><b>Wi-Fi<\/b>/);
   assert.match(HTML, /data-progress="bms"><span>3<\/span><b>JK BMS<\/b>/);
-  assert.match(HTML, /id="wifi-step-kicker">Етап 2 \/ 3/);
-  assert.match(HTML, /data-step="bms">[\s\S]*?<p class="setup-kicker">Етап 3 \/ 3/);
+  assert.match(HTML, /id="wifi-step-kicker" data-i18n="text\.step_2_of_3">Етап 2 \/ 3/);
+  assert.match(HTML, /data-step="bms">[\s\S]*?<p class="setup-kicker" data-i18n="text\.step_3_of_3">Етап 3 \/ 3/);
   assert.match(CSS, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(CSS, /\.setup-progress::before/);
   assert.match(CSS, /left: 16\.6667%/);
@@ -151,6 +151,6 @@ test('JK BMS is optional after valid Wi-Fi and on failed BMS validation', () => 
   assert.match(HTML, /id="bms-validation-skip"/);
   assert.match(APP, /await api\.finishWithoutBms\(\)/);
   assert.match(APP, /status\.setup_completed_without_bms !== true/);
-  assert.match(APP, /Не підключено — можна додати пізніше/);
+  assert.match(APP, /tr\('text\.not_connected_you_can_add_it_later'\)/);
   assert.match(APP, /showSuccess\(status\)/);
 });

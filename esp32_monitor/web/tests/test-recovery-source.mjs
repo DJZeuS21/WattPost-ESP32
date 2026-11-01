@@ -19,7 +19,7 @@ test('Recovery is a distinct lightweight setup-shell mode', () => {
   assert.match(APP, /status\.mode === 'recovery'/);
   assert.match(APP, /this\.showRecovery\(status\)/);
   assert.match(APP, /this\.\$\('setup-progress'\)\.classList\.toggle\('is-hidden', this\.recoveryMode\)/);
-  assert.match(APP, /WattPost — Відновлення Wi-Fi/);
+  assert.match(APP, /tr\('text\.wattpost_wi_fi_recovery'\)/);
 });
 
 test('Recovery exposes saved-Wi-Fi reconnect and safe network replacement', () => {
@@ -28,7 +28,7 @@ test('Recovery exposes saved-Wi-Fi reconnect and safe network replacement', () =
   assert.match(APP, /api\.reconnectWifi\(\)/);
   assert.match(APP, /this\.showStep\('wifi'\)/);
   assert.match(APP, /if \(recoveryFlow\) \{[\s\S]*?this\.showRecovery/);
-  assert.match(APP, /Якщо BMS ще не вибрано, завершіть її налаштування там/);
+  assert.match(APP, /tr\('setup\.wifi_saved_recovery'\)/);
   assert.match(API, /\/api\/device\/wifi\/reconnect/);
   assert.match(API, /\/api\/device\/wifi\/configure/);
 });

@@ -12,6 +12,11 @@ const SOURCE = fs.readFileSync(
 );
 const CSS = fs.readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8');
 const require = createRequire(import.meta.url);
+// The production UI loads the locale runtime and both catalogs before Device Settings.
+globalThis.localStorage ??= { getItem: key => key === 'wattpost.language' ? 'uk' : null, setItem() {} };
+require('../js/i18n.js');
+require('../js/i18n-uk.js');
+require('../js/i18n-en.js');
 const {
   DeviceSettingsView,
   safePairUrl,
@@ -285,7 +290,7 @@ test('Firmware card surfaces pending OTA validation without inventing update ava
   );
   assert.equal(nodes['device-firmware-state'].dataset.tone, 'warning');
   assert.equal(nodes['device-ota-state'].textContent, 'Перевіряється');
-  assert.equal(SOURCE.includes('Доступне оновлення'), true);
+  assert.match(SOURCE, /tr\('text\.update_available'\)/);
 });
 
 test('Firmware card renders automatic signed OTA availability and retry states', () => {
@@ -469,7 +474,7 @@ test('BMS card keeps canonical status data when live telemetry arrives', async (
 
 test('Remote Access card exposes real Cloud actions without technical identity', () => {
   assert.match(SOURCE, /id="device-cloud-connect"[^>]*>Підключити до акаунта</);
-  assert.match(SOURCE, /id="device-cloud-disconnect"[^>]*hidden>Відключити Cloud</);
+  assert.match(SOURCE, /id="device-cloud-disconnect"[^>]*hidden[^>]*data-i18n="text\.disconnect_cloud"/);
   assert.match(SOURCE, /id="device-cloud-transport"/);
   assert.match(SOURCE, /id="device-cloud-account"/);
   assert.equal(SOURCE.includes('Device ID'), false);

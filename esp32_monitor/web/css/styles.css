@@ -99,6 +99,28 @@ h1, h2, h3, h4, h5, h6, p, span, strong, small { margin: 0; padding: 0; }
   outline: 2px solid #58a6ff;
   outline-offset: 2px;
 }
+.language-picker {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.language-switch {
+  appearance: none;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #0d1117;
+  color: #c9d1d9;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  min-width: 36px;
+  min-height: 28px;
+  text-align: center;
+  padding: 2px 4px;
+}
+.language-switch:hover { border-color: #58a6ff; }
+.language-switch:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
 .brand {
   display: flex; align-items: center; gap: 10px;
   width: fit-content;
@@ -3652,3 +3674,6 @@ canvas { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .device-ota-progress-fill { animation: none !important; transition: none; }
 }
+
+/* In English mode the translated primary BMS label is sufficient. */
+html[lang="en"] .setting-label-en { display: none; }

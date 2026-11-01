@@ -32,11 +32,18 @@
 
   const SENSOR_NAME_MAP = {
     mos: 'MOSFET',
-    t1: 'Датчик T1',
-    t2: 'Датчик T2',
+    t1: 'T1',
+    t2: 'T2',
     ext254: 'EXT254',
-    ext256: 'Датчик T3',
-    ext258: 'Датчик T4',
+    ext256: 'T3',
+    ext258: 'T4',
+  };
+
+  // Semantic UI identities, independent of device-provided labels and locale.
+  // Keep this module pure; translate these keys only in the rendering layer.
+  const SENSOR_NAME_KEY_MAP = {
+    t1: 'sensor.t1', t2: 'sensor.t2',
+    ext256: 'sensor.t3', ext258: 'sensor.t4',
   };
 
   const HISTORY_TEMP_SLOT_MAP = {
@@ -139,6 +146,7 @@
       .map(ch => ({
         id: ch.id,
         name: SENSOR_NAME_MAP[ch.id] || ch.name || ch.id,
+        nameKey: SENSOR_NAME_KEY_MAP[ch.id] || null,
         role: SENSOR_ROLE_MAP[ch.id] || 'other',
         val_c: Number(Number(ch.val_c).toFixed(1)),
         color: SENSOR_COLOR_MAP[ch.id] || '#58A6FF',
@@ -201,7 +209,7 @@
 
   function normalizeLive(raw) {
     if (!raw || typeof raw !== 'object') {
-      return { online: false, state: 'offline', message: 'Немає даних' };
+      return { online: false, state: 'offline', messageKey: 'text.no_data' };
     }
 
     const wifiRssi = raw.wifi_rssi_dbm != null && Number.isFinite(Number(raw.wifi_rssi_dbm))
@@ -249,7 +257,8 @@
       return {
         online: false,
         state: 'offline',
-        message: raw.message || 'Немає зв’язку з BMS',
+        message: raw.message || null,
+        messageKey: 'text.no_bms_connection',
         ...deviceFields,
       };
     }
@@ -339,7 +348,8 @@
       online: true,
       state: deviceFields.is_stale ? 'idle' : state,
       activity_state: deviceFields.is_stale ? 'unknown' : state,
-      message: raw.message || 'Дані BMS отримано',
+      message: raw.message || null,
+      messageKey: 'telemetry.bms_data_received',
       ...deviceFields,
       model: raw.model || 'JK BMS',
       profile: raw.semantic_profile || 'GENERIC',
@@ -503,6 +513,7 @@
     SENSOR_ROLE_MAP,
     SENSOR_COLOR_MAP,
     SENSOR_NAME_MAP,
+    SENSOR_NAME_KEY_MAP,
     HISTORY_TEMP_SLOT_MAP,
   };
 });
