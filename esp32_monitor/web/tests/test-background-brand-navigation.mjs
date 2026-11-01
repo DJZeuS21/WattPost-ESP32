@@ -33,3 +33,11 @@ test('Cloud runtime redirects the same shared brand to the account device panel'
   assert.match(APP, /brandLink\.href = '\/account\?list=1'/);
   assert.match(APP, /capabilities\.accountControls !== true/);
 });
+
+
+test('GitHub icon is a separate accessible external link immediately after the WattPost brand', () => {
+  assert.match(INDEX, /<div class="brand-group">[\s\S]*?<a class="brand" id="brand-home-link"[\s\S]*?<\/a>[\s\S]*?<a class="brand-github-link"/);
+  assert.match(INDEX, /class="brand-github-link"[^>]+href="https:\/\/github\.com\/DJZeuS21\/WattPost-ESP32"[^>]+target="_blank" rel="noopener noreferrer"[^>]+aria-label="WattPost на GitHub/);
+  assert.equal((INDEX.match(/class="brand-github-link"/g) || []).length, 1);
+  assert.match(CSS, /\.brand-github-link:focus-visible/);
+});

@@ -1,5 +1,27 @@
 # WattPost ESP32 — release provenance and verification
 
+## V20.0.2 (2026-11-01)
+
+- **Firmware/web version:** `V20.0.2`, with a compact GitHub link beside the
+  WattPost brand in the local and Cloud navigation headers.
+- **Private canonical source commit and exact embedded build ID:**
+  `8a02d96e5094`. The standalone public source commit differs because the
+  Cloud backend and internal build environment are deliberately not exported.
+- **Exact signed Cloud OTA application image:** 1,542,064 bytes, SHA-256
+  `b8d5eccfc70d2b4b4337de35279ef685c5058bcfbfeb394a981d108ef1ac8e75`.
+  An ECDSA-P256 detached signature was generated off the Cloud host and
+  verified against the public verification key embedded in the firmware.
+- **USB full-installation image:** 1,673,136 bytes, SHA-256
+  `c782c8af46b539abf949a25ee54088e40dd3206fd36e912e823c487d76c1f4b2`,
+  install at Flash offset `0x0` for classic ESP32 with at least 4 MB Flash.
+- **Release acceptance:** all Stage 1 host/C, development-proxy and 188 web
+  regression tests; one exact clean ESP-IDF 5.5.5 release build; 24 embedded
+  production web assets; unchanged partition layout; 358,480 bytes minimum
+  OTA slot headroom. Cloud disposable browser flow also passed.
+- **Production Cloud OTA:** deployment is separate from GitHub publication;
+  a GitHub installer release does not itself update any ESP32. Physical OTA
+  installation must be confirmed by live device version/build and Cloud status.
+
 ## V20.0.1
 
 - **User-facing version:** `V20.0.1`, read from `esp32_monitor/VERSION`.

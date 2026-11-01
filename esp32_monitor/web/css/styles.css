@@ -75,6 +75,30 @@ h1, h2, h3, h4, h5, h6, p, span, strong, small { margin: 0; padding: 0; }
 @media (min-width: 768px) {
   .header { padding: 0 32px; }
 }
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  min-width: 0;
+}
+.brand-github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  color: #8b949e;
+  text-decoration: none;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+.brand-github-link:hover { color: #e6edf3; background: #161b22; }
+.brand-github-link:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
+}
 .brand {
   display: flex; align-items: center; gap: 10px;
   width: fit-content;
