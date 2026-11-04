@@ -375,7 +375,7 @@ WattPostI18n.register('uk', {
   "text.connection_timed_out_try_again": "Підключення не завершилося вчасно. Спробуйте ще раз.",
   "text.continue": "Продовжити",
   "text.continuous_uptime": "Час безперервної роботи",
-  "text.could_not_connect_to_the_selected_jk_bms": "Не вдалося підключитися до вибраної JK BMS.",
+  "text.could_not_connect_to_the_selected_jk_bms": "Не вдалося підключитися до вибраної JK BMS. Можливі причини: телефон уже підключений до BMS або слабкий Bluetooth-сигнал. Закрийте застосунок JK BMS на телефоні (за потреби вимкніть Bluetooth), піднесіть WattPost ближче до акумулятора та спробуйте ще раз.",
   "text.could_not_connect_to_wi_fi_check_the_password": "Не вдалося підключитися до Wi-Fi. Перевірте пароль.",
   "text.could_not_connect_to_wi_fi_correct_the_details_and_try_aga": "Не вдалося підключитися до Wi-Fi. Виправте дані та спробуйте ще раз.",
   "text.could_not_connect_wattpost_is_restoring_the_previous_saved": "Не вдалося підключитися. WattPost відновлює попередню збережену мережу.",

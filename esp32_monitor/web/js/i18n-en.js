@@ -375,7 +375,7 @@ WattPostI18n.register('en', {
   "text.connection_timed_out_try_again": "Connection timed out. Try again.",
   "text.continue": "Continue",
   "text.continuous_uptime": "Continuous uptime",
-  "text.could_not_connect_to_the_selected_jk_bms": "Could not connect to the selected JK BMS.",
+  "text.could_not_connect_to_the_selected_jk_bms": "Could not connect to the selected JK BMS. Possible causes: a phone is already connected to the BMS or the Bluetooth signal is weak. Close the JK BMS app on the phone (turn off the phone's Bluetooth if needed), move WattPost closer to the battery, and try again.",
   "text.could_not_connect_to_wi_fi_check_the_password": "Could not connect to Wi-Fi. Check the password.",
   "text.could_not_connect_to_wi_fi_correct_the_details_and_try_aga": "Could not connect to Wi-Fi. Correct the details and try again.",
   "text.could_not_connect_wattpost_is_restoring_the_previous_saved": "Could not connect. WattPost is restoring the previous saved network.",

@@ -1,5 +1,28 @@
 # WattPost ESP32 — release provenance and verification
 
+## V20.0.4 (2026-11-04)
+
+- **Firmware/web version:** `V20.0.4`. When a JK BMS BLE connection fails,
+  First Setup and Device Settings explain two possible causes: an existing
+  connection from a phone and weak Bluetooth signal. Guidance is available in
+  Ukrainian and English. No BLE authentication/protocol, Wi-Fi, NVS, History,
+  Flash partitions or OTA behavior changed.
+- **Exact canonical private-source commit / embedded build ID:**
+  `69e6742b5073` (the standalone export has its own different Git commit).
+- **Signed app-only Cloud OTA image:** 1,580,576 bytes; SHA-256
+  `060611da035f18c305f17006582963ce43b55ba29459681933f58557f8029d13`.
+  ECDSA-P256 detached signature was created offline and checked against the
+  public verification key embedded in the tested firmware.
+- **Full USB installation image (flash at `0x0`):** 1,711,648 bytes; SHA-256
+  `4b1e1b861831a74081ce0fd1dfc1385431dacf4d6356eb82c3c3144800200255`.
+  The contents at offsets `0x1000`, `0x8000`, `0xF000`, `0x20000` match the
+  exact tested bootloader, partition table, OTA initializer and app bytes.
+- **Release acceptance:** 223 host/C tests, 6 development proxy tests,
+  219 serial Web tests and one clean ESP-IDF 5.5.5 release build passed;
+  27 production web assets; minimum OTA partition headroom 319,968 bytes.
+  GitHub distribution and Cloud OTA installation are distinct operations;
+  verify installation from device telemetry rather than release metadata.
+
 ## V20.0.3 (2026-11-01)
 
 - **Firmware/web version:** `V20.0.3`, with explicit Ukrainian/English
