@@ -129,8 +129,21 @@ class DeviceStatusHttpSourceTests(unittest.TestCase):
 
     def test_http_handler_capacity_tracks_registered_routes(self):
         registered = MAIN.count("httpd_register_uri_handler(server")
-        self.assertEqual(registered, 27)
-        self.assertIn("config.max_uri_handlers = 27;", MAIN)
+        self.assertEqual(registered, 32)
+        self.assertIn("config.max_uri_handlers = 32;", MAIN)
+
+    def test_all_uri_handlers_are_static_to_protect_sys_evt_stack(self):
+        server = block("static void start_server", "static bool start_mdns")
+        # IP_EVENT_STA_GOT_IP invokes start_server on the default ESP-IDF
+        # sys_evt task. Automatic URI descriptors can exhaust its small stack.
+        import re
+        descriptors = re.findall(
+            r"^\s*static const httpd_uri_t ([a-z_]+) = \{",
+            server,
+            re.MULTILINE,
+        )
+        self.assertEqual(len(descriptors), 32)
+        self.assertNotRegex(server, r"(?m)^\s*const httpd_uri_t ")
 
     def test_local_http_keeps_socket_budget_beside_cloud_transport(self):
         server = block("static void start_server", "static bool start_mdns")

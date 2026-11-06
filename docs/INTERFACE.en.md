@@ -36,7 +36,7 @@ The snapshot matches the end of the same history: 75% charge, approximately 600 
 
 ![Demonstration BMS parameters: capacity, protection, balancing and temperature thresholds](screenshots/bms-settings.png)
 
-All 53 parameters have explicitly assigned demonstration values. The name and serial number identify the example; these are not records or settings from a real device. Values illustrate the screen and are not battery configuration recommendations. You can browse and search the parameters; this screen cannot change them.
+All 53 parameters have explicitly assigned demonstration values. The name and serial number identify the example; these are not records or settings from a real device. Values illustrate the screen and are not battery configuration recommendations. This demonstration screenshot shows browsing and searching only. Since V20.0.13, the local interface supports editing eligible settings on a compatible JK BMS, reviewing changes and verifying writes by reading settings back. The demonstration does not send commands to a real battery, and the Cloud view remains read-only.
 
 ## On a Phone
 

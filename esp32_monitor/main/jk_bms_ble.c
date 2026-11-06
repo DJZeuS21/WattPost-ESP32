@@ -55,6 +55,12 @@ static jk_bms_data_t latest_data;
 static jk_bms_settings_t latest_settings;
 static jk_bms_device_info_t latest_device_info;
 static int64_t last_data_us;
+/* Same-connection generations prevent stale Device Info/settings verification. */
+static uint32_t ble_connection_epoch;
+static uint32_t latest_settings_epoch;
+static uint32_t latest_device_info_epoch;
+static jk_bms_write_transaction_t write_transaction;
+static jk_bms_settings_refresh_t settings_refresh;
 
 #define JK_BMS_USER_SCAN_DURATION_MS 8000
 #define JK_BMS_POLL_TASK_STACK_SIZE 4096u
@@ -352,13 +358,17 @@ static void finalize_user_scan(int reason) {
     }
 }
 
-static void send_command(uint16_t conn_handle, uint16_t attr_handle, uint8_t command) {
+static int send_command_status(uint16_t conn_handle, uint16_t attr_handle, uint8_t command) {
     uint8_t frame[20] = {0xAA, 0x55, 0x90, 0xEB, command};
     for (size_t index = 0; index < sizeof(frame) - 1; ++index) {
         frame[sizeof(frame) - 1] += frame[index];
     }
-    const int rc = ble_gattc_write_no_rsp_flat(conn_handle, attr_handle,
-                                                frame, sizeof(frame));
+    return ble_gattc_write_no_rsp_flat(conn_handle, attr_handle,
+                                       frame, sizeof(frame));
+}
+
+static void send_command(uint16_t conn_handle, uint16_t attr_handle, uint8_t command) {
+    const int rc = send_command_status(conn_handle, attr_handle, command);
     if (rc != 0) {
         ESP_LOGW(TAG, "Не вдалося надіслати команду 0x%02X: %d", command, rc);
     }
@@ -596,6 +606,10 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
             const uint32_t connected_at = (uint32_t) (esp_timer_get_time() / 1000000);
             portENTER_CRITICAL(&data_lock);
             connected = true;
+            ++ble_connection_epoch;
+            if (ble_connection_epoch == 0u) ble_connection_epoch = 1u;
+            latest_settings_epoch = 0u;
+            latest_device_info_epoch = 0u;
             status_notification_received = false;
             cmd_0x96_sent = false;
             settings_retry_done = false;
@@ -624,6 +638,8 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
             bool validated_selection_pending_save = false;
             portENTER_CRITICAL(&data_lock);
             connected = false;
+            jk_bms_write_transaction_disconnect(&write_transaction);
+            jk_bms_settings_refresh_disconnect(&settings_refresh);
             status_notification_received = false;
             cmd_0x96_sent = false;
             settings_retry_done = false;
@@ -651,7 +667,9 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
         case BLE_GAP_EVENT_NOTIFY_RX: {
             bool accept_notification;
             portENTER_CRITICAL(&data_lock);
-            accept_notification = configured || selection_active;
+            accept_notification = connected &&
+                (configured || selection_active) &&
+                event->notify_rx.conn_handle == connection_handle;
             portEXIT_CRITICAL(&data_lock);
             if (!accept_notification ||
                 event->notify_rx.attr_handle != notify_handle) {
@@ -715,6 +733,12 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
                 latest_settings = decoded_settings;
                 latest_settings.valid = true;
                 latest_settings.received_count = prev_count + 1;
+                latest_settings_epoch = ble_connection_epoch;
+                jk_bms_write_transaction_receive(
+                    &write_transaction, ble_connection_epoch, &latest_settings);
+                jk_bms_settings_refresh_receive(
+                    &settings_refresh, ble_connection_epoch,
+                    latest_settings.received_count);
                 received_count = latest_settings.received_count;
                 portEXIT_CRITICAL(&data_lock);
                 ESP_LOGI(TAG, "BMS Налаштування #%lu: UVP=%.3fV UVPR=%.3fV OVP=%.3fV OVPR=%.3fV Bal=%.3fV/%.3fV Cells=%u Cap=%.1fAh",
@@ -733,6 +757,7 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
                 latest_device_info = decoded_device_info;
                 latest_device_info.valid = true;
                 latest_device_info.received_count = prev_count + 1;
+                latest_device_info_epoch = ble_connection_epoch;
                 received_count = latest_device_info.received_count;
                 if (!cmd_0x96_sent && write_handle != 0) {
                     cmd_0x96_sent = true;
@@ -763,6 +788,8 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
 static void on_reset(int reason) {
     portENTER_CRITICAL(&data_lock);
     nimble_synced = false;
+    jk_bms_write_transaction_disconnect(&write_transaction);
+    jk_bms_settings_refresh_disconnect(&settings_refresh);
     if (scan_owner == BLE_SCAN_OWNER_USER) {
         user_scan_state = JK_BMS_BLE_SCAN_ERROR;
         user_scan_error_status = reason;
@@ -816,6 +843,9 @@ static void poll_task(void *parameter) {
         POLL_RECOVER,
         POLL_SEND_FALLBACK,
         POLL_SEND_SETTINGS_RETRY,
+        POLL_SEND_WRITE,
+        POLL_SEND_WRITE_READBACK,
+        POLL_SEND_EXPLICIT_SETTINGS_REFRESH,
     } poll_action_t;
 
     while (true) {
@@ -827,6 +857,10 @@ static void poll_task(void *parameter) {
         poll_action_t action = POLL_NONE;
         uint16_t action_conn_handle = 0;
         uint16_t action_attr_handle = 0;
+        uint32_t action_epoch = 0u;
+        uint32_t action_generation = 0u;
+        uint32_t action_settings_baseline = 0u;
+        uint8_t action_frame[JK_BMS_WRITE_FRAME_LENGTH] = {0};
 
         portENTER_CRITICAL(&data_lock);
         if (forget_active && forget_persisted) {
@@ -863,6 +897,21 @@ static void poll_task(void *parameter) {
                 JK_BMS_BLE_ERROR_CONNECT_FAILED);
         }
 
+        /* Time out queued/verification operations even without a write handle.
+         * Do not reserve/send a command until the dispatch branch below. */
+        if (jk_bms_write_transaction_active(&write_transaction) &&
+            (!connected || now_us >= write_transaction.deadline_us)) {
+            (void) jk_bms_write_transaction_next(
+                &write_transaction,
+                connected ? ble_connection_epoch : 0u, now_us);
+        }
+        if (jk_bms_settings_refresh_active(&settings_refresh) &&
+            (!connected || now_us >= settings_refresh.deadline_us)) {
+            (void) jk_bms_settings_refresh_next(
+                &settings_refresh,
+                connected ? ble_connection_epoch : 0u, now_us);
+        }
+
         if (!selection_active && !reconnect_active && !forget_active &&
             connected && recovery_deadline_seconds != 0 &&
             now_seconds >= recovery_deadline_seconds) {
@@ -871,6 +920,40 @@ static void poll_task(void *parameter) {
             phase = "recovering";
             action = POLL_RECOVER;
             action_conn_handle = connection_handle;
+        } else if (connected && !selection_active && !reconnect_active &&
+                   !forget_active && write_handle != 0 && notify_handle != 0 &&
+                   jk_bms_write_transaction_active(&write_transaction)) {
+            const jk_bms_write_tx_action_t next =
+                jk_bms_write_transaction_next(
+                    &write_transaction, ble_connection_epoch, now_us);
+            if (next == JK_BMS_WRITE_TX_ACTION_SEND_WRITE ||
+                next == JK_BMS_WRITE_TX_ACTION_REQUEST_SETTINGS) {
+                action = next == JK_BMS_WRITE_TX_ACTION_SEND_WRITE
+                             ? POLL_SEND_WRITE
+                             : POLL_SEND_WRITE_READBACK;
+                action_conn_handle = connection_handle;
+                action_attr_handle = write_handle;
+                action_epoch = ble_connection_epoch;
+                action_generation = write_transaction.generation;
+                action_settings_baseline = latest_settings.received_count;
+                if (action == POLL_SEND_WRITE) {
+                    memcpy(action_frame, write_transaction.command.frame,
+                           sizeof(action_frame));
+                }
+            }
+        } else if (connected && !selection_active && !reconnect_active &&
+                   !forget_active && write_handle != 0 && notify_handle != 0 &&
+                   jk_bms_settings_refresh_active(&settings_refresh)) {
+            if (jk_bms_settings_refresh_next(
+                    &settings_refresh, ble_connection_epoch, now_us)) {
+                action = POLL_SEND_EXPLICIT_SETTINGS_REFRESH;
+                action_conn_handle = connection_handle;
+                action_attr_handle = write_handle;
+                action_epoch = ble_connection_epoch;
+                action_generation = settings_refresh.generation;
+                action_settings_baseline = latest_settings.received_count;
+                settings_refresh.read_baseline = action_settings_baseline;
+            }
         } else if (!forget_active &&
                    connected && write_handle != 0 && notify_handle != 0 && !cmd_0x96_sent &&
                    connected_since_seconds != 0 &&
@@ -912,6 +995,53 @@ static void poll_task(void *parameter) {
         } else if (action == POLL_SEND_SETTINGS_RETRY) {
             ESP_LOGI(TAG, "Одноразовий повтор 0x96 для отримання налаштувань BMS");
             send_command(action_conn_handle, action_attr_handle, 0x96);
+        } else if (action == POLL_SEND_WRITE ||
+                   action == POLL_SEND_WRITE_READBACK ||
+                   action == POLL_SEND_EXPLICIT_SETTINGS_REFRESH) {
+            /* Recheck before dispatch: a disconnect or user action can occur
+             * after the locked reservation above. Stale completions are
+             * ignored by transaction generation and connection epoch. */
+            portENTER_CRITICAL(&data_lock);
+            const bool still_current =
+                connected && ble_connection_epoch == action_epoch &&
+                connection_handle == action_conn_handle &&
+                write_handle == action_attr_handle &&
+                (action == POLL_SEND_EXPLICIT_SETTINGS_REFRESH
+                    ? settings_refresh.generation == action_generation &&
+                      settings_refresh.state == JK_BMS_REFRESH_REQUESTING
+                    : write_transaction.generation == action_generation &&
+                      write_transaction.state ==
+                          (action == POLL_SEND_WRITE
+                               ? JK_BMS_WRITE_TX_SENDING
+                               : JK_BMS_WRITE_TX_READING));
+            portEXIT_CRITICAL(&data_lock);
+
+            const int rc = still_current
+                ? (action == POLL_SEND_WRITE
+                       ? ble_gattc_write_no_rsp_flat(
+                             action_conn_handle, action_attr_handle,
+                             action_frame, sizeof(action_frame))
+                       : send_command_status(
+                             action_conn_handle, action_attr_handle, 0x96))
+                : -1;
+            portENTER_CRITICAL(&data_lock);
+            if (action == POLL_SEND_WRITE) {
+                jk_bms_write_transaction_write_sent(
+                    &write_transaction, action_generation, action_epoch,
+                    rc == 0, esp_timer_get_time());
+            } else if (action == POLL_SEND_WRITE_READBACK) {
+                jk_bms_write_transaction_read_requested(
+                    &write_transaction, action_generation, action_epoch,
+                    rc == 0, action_settings_baseline, esp_timer_get_time());
+            } else {
+                jk_bms_settings_refresh_requested(
+                    &settings_refresh, action_generation, action_epoch,
+                    rc == 0, action_settings_baseline, esp_timer_get_time());
+            }
+            portEXIT_CRITICAL(&data_lock);
+            if (rc != 0) {
+                ESP_LOGW(TAG, "BMS settings operation transport failed: %d", rc);
+            }
         }
     }
 }
@@ -930,6 +1060,11 @@ bool jk_bms_ble_start(const jk_bms_ble_target_t *target) {
     bms_operation_state = JK_BMS_BLE_OPERATION_IDLE;
     bms_operation_phase = JK_BMS_BLE_PHASE_NONE;
     bms_operation_error = JK_BMS_BLE_ERROR_NONE;
+    ble_connection_epoch = 0u;
+    latest_settings_epoch = 0u;
+    latest_device_info_epoch = 0u;
+    jk_bms_write_transaction_init(&write_transaction);
+    jk_bms_settings_refresh_init(&settings_refresh);
     selection_active = false;
     selection_validated = false;
     selection_save_claimed = false;
@@ -1297,6 +1432,8 @@ jk_bms_ble_reconnect_start_result_t jk_bms_ble_reconnect_start(
         return JK_BMS_BLE_RECONNECT_START_NOT_CONFIGURED;
     }
     if (selection_active || reconnect_active || forget_active ||
+        jk_bms_write_transaction_active(&write_transaction) ||
+        jk_bms_settings_refresh_active(&settings_refresh) ||
         scan_owner == BLE_SCAN_OWNER_USER ||
         user_scan_state == JK_BMS_BLE_SCAN_RUNNING ||
         connecting) {
@@ -1353,6 +1490,8 @@ jk_bms_ble_forget_start_result_t jk_bms_ble_forget_start(
         return JK_BMS_BLE_FORGET_START_NOT_CONFIGURED;
     }
     if (selection_active || reconnect_active || forget_active ||
+        jk_bms_write_transaction_active(&write_transaction) ||
+        jk_bms_settings_refresh_active(&settings_refresh) ||
         bms_operation_state == JK_BMS_BLE_OPERATION_RUNNING) {
         portEXIT_CRITICAL(&data_lock);
         return JK_BMS_BLE_FORGET_START_BUSY;
@@ -1659,6 +1798,150 @@ bool jk_bms_ble_get_data(jk_bms_data_t *data) {
     portEXIT_CRITICAL(&data_lock);
     data->valid = fresh;
     return fresh;
+}
+
+bool jk_bms_ble_write_policy_snapshot(jk_bms_ble_write_policy_t *policy) {
+    if (policy == NULL) {
+        return false;
+    }
+    memset(policy, 0, sizeof(*policy));
+    const int64_t now_us = esp_timer_get_time();
+    portENTER_CRITICAL(&data_lock);
+    const bool link_ready =
+        configured && nimble_synced && connected &&
+        write_handle != 0u && notify_handle != 0u &&
+        latest_settings.valid &&
+        latest_settings_epoch == ble_connection_epoch &&
+        latest_device_info.valid &&
+        latest_device_info_epoch == ble_connection_epoch &&
+        latest_data.valid && now_us - last_data_us < 15000000;
+    policy->model_supported = latest_device_info.valid &&
+        latest_device_info_epoch == ble_connection_epoch &&
+        jk_bms_write_model_supported(latest_device_info.model);
+    policy->connection_epoch = link_ready && policy->model_supported
+        ? ble_connection_epoch : 0u;
+    policy->write_ready = link_ready && policy->model_supported &&
+        !selection_active && !reconnect_active && !forget_active &&
+        !connecting && bms_operation_state != JK_BMS_BLE_OPERATION_RUNNING &&
+        !jk_bms_write_transaction_active(&write_transaction) &&
+        !jk_bms_settings_refresh_active(&settings_refresh);
+    portEXIT_CRITICAL(&data_lock);
+    return true;
+}
+
+jk_bms_ble_write_start_result_t jk_bms_ble_write_start(
+    const char *api_key, double value, double expected_before,
+    uint32_t expected_connection_epoch, uint32_t *generation) {
+    jk_bms_write_command_t command = {0};
+    jk_bms_write_command_t expected = {0};
+    const jk_bms_write_status_t encoded =
+        jk_bms_write_prepare(api_key, value, &command);
+    if (encoded == JK_BMS_WRITE_UNSUPPORTED) {
+        return JK_BMS_BLE_WRITE_START_UNSUPPORTED;
+    }
+    if (encoded != JK_BMS_WRITE_OK ||
+        jk_bms_write_prepare(api_key, expected_before, &expected) !=
+            JK_BMS_WRITE_OK ||
+        expected.raw_value == command.raw_value) {
+        return JK_BMS_BLE_WRITE_START_INVALID;
+    }
+
+    const int64_t now_us = esp_timer_get_time();
+    portENTER_CRITICAL(&data_lock);
+    if (expected_connection_epoch == 0u ||
+        expected_connection_epoch != ble_connection_epoch) {
+        portEXIT_CRITICAL(&data_lock);
+        return JK_BMS_BLE_WRITE_START_STALE_CONNECTION;
+    }
+    if (!configured || !nimble_synced || !connected ||
+        write_handle == 0u || notify_handle == 0u ||
+        !latest_settings.valid ||
+        latest_settings_epoch != ble_connection_epoch ||
+        !latest_device_info.valid ||
+        latest_device_info_epoch != ble_connection_epoch ||
+        !latest_data.valid || now_us - last_data_us >= 15000000) {
+        portEXIT_CRITICAL(&data_lock);
+        return JK_BMS_BLE_WRITE_START_NOT_READY;
+    }
+    if (!jk_bms_write_model_supported(latest_device_info.model)) {
+        portEXIT_CRITICAL(&data_lock);
+        return JK_BMS_BLE_WRITE_START_UNSUPPORTED_MODEL;
+    }
+    if (selection_active || reconnect_active || forget_active ||
+        connecting || bms_operation_state == JK_BMS_BLE_OPERATION_RUNNING ||
+        jk_bms_write_transaction_active(&write_transaction) ||
+        jk_bms_settings_refresh_active(&settings_refresh)) {
+        portEXIT_CRITICAL(&data_lock);
+        return JK_BMS_BLE_WRITE_START_BUSY;
+    }
+    /* Compare-and-swap against the actual settings of this connection.
+     * Never accept a browser's stale expected_before as authoritative.
+     * Numeric representation validation alone does not prove safety. */
+    if (jk_bms_write_compare(
+            &expected, &latest_settings, 0u) != JK_BMS_WRITE_READBACK_MATCH) {
+        portEXIT_CRITICAL(&data_lock);
+        return JK_BMS_BLE_WRITE_START_STALE_VALUE;
+    }
+    const bool started = jk_bms_write_transaction_begin(
+        &write_transaction, &command, ble_connection_epoch, now_us);
+    if (started && generation != NULL) {
+        *generation = write_transaction.generation;
+    }
+    portEXIT_CRITICAL(&data_lock);
+    return started ? JK_BMS_BLE_WRITE_START_OK : JK_BMS_BLE_WRITE_START_BUSY;
+}
+
+bool jk_bms_ble_write_snapshot(jk_bms_ble_write_snapshot_t *snapshot) {
+    if (snapshot == NULL) {
+        return false;
+    }
+    portENTER_CRITICAL(&data_lock);
+    snapshot->state = write_transaction.state;
+    snapshot->reason = write_transaction.reason;
+    snapshot->generation = write_transaction.generation;
+    snapshot->api_key = write_transaction.command.spec != NULL
+                            ? write_transaction.command.spec->api_key
+                            : NULL;
+    portEXIT_CRITICAL(&data_lock);
+    return true;
+}
+
+bool jk_bms_ble_settings_refresh_start(uint32_t *generation) {
+    const int64_t now_us = esp_timer_get_time();
+    portENTER_CRITICAL(&data_lock);
+    const bool ready = configured && nimble_synced && connected &&
+        write_handle != 0u && notify_handle != 0u &&
+        latest_settings.valid && latest_settings_epoch == ble_connection_epoch &&
+        latest_device_info.valid && latest_device_info_epoch == ble_connection_epoch &&
+        latest_data.valid && now_us - last_data_us < 15000000 &&
+        jk_bms_write_model_supported(latest_device_info.model) &&
+        !selection_active && !reconnect_active && !forget_active && !connecting &&
+        bms_operation_state != JK_BMS_BLE_OPERATION_RUNNING &&
+        !jk_bms_write_transaction_active(&write_transaction) &&
+        !jk_bms_settings_refresh_active(&settings_refresh);
+    bool started = false;
+    if (ready) {
+        started = jk_bms_settings_refresh_begin(
+            &settings_refresh, ble_connection_epoch, now_us);
+        if (started && generation) *generation = settings_refresh.generation;
+    }
+    portEXIT_CRITICAL(&data_lock);
+    return started;
+}
+
+bool jk_bms_ble_settings_refresh_snapshot(jk_bms_ble_refresh_snapshot_t *snapshot) {
+    if (!snapshot) return false;
+    portENTER_CRITICAL(&data_lock);
+    snapshot->generation = settings_refresh.generation;
+    snapshot->connection_epoch = settings_refresh.connection_epoch;
+    snapshot->received_count =
+        settings_refresh.state == JK_BMS_REFRESH_RECEIVED &&
+        latest_settings_epoch == settings_refresh.connection_epoch
+        ? latest_settings.received_count : 0u;
+    snapshot->state = settings_refresh.state;
+    snapshot->reason = settings_refresh.reason;
+    portEXIT_CRITICAL(&data_lock);
+    return true;
 }
 
 bool jk_bms_ble_get_settings(jk_bms_settings_t *settings) {

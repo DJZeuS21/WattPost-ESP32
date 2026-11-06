@@ -59,7 +59,7 @@ node --test --test-concurrency=1 esp32_monitor/web/tests/*.mjs
 The full release acceptance script also runs a fresh ESP-IDF build.
 GitHub Releases contain a **single merged full installation BIN**,
 separately from the app-only signed Cloud OTA image. See
-[release provenance](../docs/RELEASE_PROVENANCE.md) for the verified V20.0.1
+[release provenance](../docs/RELEASE_PROVENANCE.md) for the verified V20.0.13
 binary, its checksums and the source/`build_id` relationship.
 
 Original WattPost material is [Apache 2.0 with Commons Clause](../LICENSE)

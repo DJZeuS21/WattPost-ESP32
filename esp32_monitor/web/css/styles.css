@@ -3422,6 +3422,180 @@ canvas { display: block; }
   border-radius: 50%;
 }
 
+/* JK BMS editor — the actions remain visible while editing lower rows. */
+#settings-editor-controls:empty { display: none; }
+.view-bms-settings.is-bms-edit-active { padding-bottom: 100px; }
+#settings-editor-controls.is-bms-edit-active {
+  position: fixed;
+  z-index: 30;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  left: 12px;
+  right: 12px;
+  width: min(760px, calc(100% - 24px));
+  max-height: min(78vh, 680px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border: 1px solid #516179;
+  border-radius: 12px;
+  background: #131c28;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .65);
+}
+.bms-edit-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.bms-edit-controls--actions { margin: 0; }
+.bms-edit-controls--actions .bms-edit-button--primary,
+.bms-edit-controls--actions .bms-edit-button--commit { margin-left: auto; }
+.bms-edit-button {
+  border: 1px solid #39485c;
+  border-radius: 8px;
+  padding: 9px 14px;
+  min-height: 44px;
+  background: #263445;
+  color: #e6edf3;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bms-edit-button--quiet {
+  background: transparent;
+  border-color: transparent;
+  color: #aebdce;
+}
+.bms-edit-button--primary { background: #266ec6; border-color: #388bfd; color: #fff; }
+.bms-edit-button--commit { background: #238636; border-color: #3fb950; color: #fff; }
+.bms-edit-button:hover:not(:disabled) { filter: brightness(1.15); }
+.bms-edit-button:focus-visible, .bms-edit-field input:focus-visible,
+.bms-edit-switch input:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
+}
+.bms-edit-button:disabled { opacity: .45; cursor: not-allowed; }
+.bms-edit-field { display: flex; align-items: center; gap: 8px; }
+.bms-edit-field input {
+  width: clamp(76px, 19vw, 128px);
+  padding: 7px;
+  border-radius: 6px;
+  border: 1px solid #576579;
+  background: #101821;
+  color: #e6edf3;
+  font: inherit;
+  font-size: 14px;
+  text-align: right;
+}
+.bms-edit-switch { display: flex; align-items: center; gap: 7px; color: #e6edf3; }
+.bms-edit-switch input { width: 19px; height: 19px; accent-color: #58a6ff; }
+.bms-edit-count { color: #e6edf3; font-size: 13px; font-weight: 600; }
+.bms-edit-status { color: #c6d5e8; font-size: 13px; line-height: 1.5; margin: 10px 0 0; }
+.bms-edit-review { color: #e6edf3; }
+.bms-edit-review strong { font-size: 15px; }
+.bms-edit-review p { color: #d9bd95; font-size: 13px; line-height: 1.5; }
+/* The generic review paragraph above is a warning, not a result status.
+ * Keep result semantics and space between the explanation and action row. */
+.bms-edit-review .bms-edit-status {
+  margin: 16px 0 20px;
+  padding-left: 11px;
+  border-left: 3px solid #58a6ff;
+  color: #c6d5e8;
+}
+.bms-edit-review .bms-edit-status--success { border-color: #56d364; color: #73df8d; }
+.bms-edit-review .bms-edit-status--error { border-color: #f47067; color: #ff9a91; }
+.bms-edit-review .bms-edit-status--warning { border-color: #f0bb70; color: #f0bb70; }
+.bms-edit-review .bms-edit-status--info { border-color: #58a6ff; color: #c6d5e8; }
+.bms-edit-review-list {
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  max-height: 35vh;
+  scrollbar-gutter: stable;
+}
+.bms-edit-review li {
+  margin: 0;
+  padding: 10px 2px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  border-top: 1px solid #303d4b;
+  font-size: 13px;
+}
+.bms-edit-review code { color: #c7d9ef; font-size: 12px; }
+/* A stable 3-column result grid: status text must never move the numeric
+ * before/after column when an operation changes pending -> verified. */
+.bms-edit-review .bms-edit-result-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px minmax(0, 220px);
+  column-gap: 12px;
+  row-gap: 5px;
+  align-items: center;
+}
+.bms-edit-result-item > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.bms-edit-result-item > code {
+  justify-self: start;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bms-edit-result-item > .bms-edit-outcome {
+  justify-self: end;
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.bms-edit-review .bms-edit-result-item > .bms-edit-reason {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.bms-edit-outcome { color: #aebdce; font-weight: 600; }
+.bms-edit-outcome--verified, .bms-edit-outcome--already_applied { color: #56d364; }
+.bms-edit-outcome--not_sent, .bms-edit-outcome--mismatch,
+.bms-edit-outcome--changed { color: #ff9a91; }
+.bms-edit-outcome--uncertain, .bms-edit-outcome--pending_retry { color: #f0bb70; }
+.bms-edit-reason {
+  flex-basis: 100%;
+  color: #b1bfce;
+  font-size: 12px;
+  line-height: 1.5;
+}
+/* Show why a batch stopped, separately from the result of each write. */
+.bms-edit-review .bms-edit-batch-notice {
+  margin: 0 0 18px;
+  padding-left: 11px;
+  border-left: 3px solid #f0bb70;
+  color: #d9bd95;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.bms-edit-outcome--pending { color: #aebdce; }
+.bms-edit-review .bms-edit-controls--actions { margin-top: 14px; }
+@media (max-width: 700px) {
+  /* At phone/tablet widths give the parameter its own row; keep values and
+   * status aligned with each other instead of squeezing three columns. */
+  .bms-edit-review .bms-edit-result-item {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    row-gap: 6px;
+  }
+  .bms-edit-result-item > span:first-child { grid-column: 1 / -1; }
+  .bms-edit-result-item > code { grid-column: 1; }
+  .bms-edit-result-item > .bms-edit-outcome { grid-column: 2; }
+}
+@media (max-width: 560px) {
+  #settings-editor-controls.is-bms-edit-active { padding: 12px; }
+  .bms-edit-controls--actions .bms-edit-count { flex-basis: 100%; }
+  .bms-edit-controls--actions .bms-edit-button { flex: 1 1 auto; }
+  .bms-edit-controls--actions .bms-edit-button--primary,
+  .bms-edit-controls--actions .bms-edit-button--commit { margin-left: 0; }
+  .bms-edit-review-list { max-height: 30vh; }
+}
+
 /* Empty & Loading States */
 .settings-empty-state {
   display: flex;

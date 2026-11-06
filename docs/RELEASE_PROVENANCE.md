@@ -1,5 +1,48 @@
 # WattPost ESP32 — release provenance and verification
 
+## V20.0.13 (2026-11-07)
+
+- **Firmware and embedded web version:** `V20.0.13`. Relative to the previous
+  GitHub V20.0.4 release, this version includes local JK BMS settings editing
+  for eligible parameters, explicit change review, sequential BLE writes,
+  readback verification and limited additional **read-only** `0x96` attempts
+  if the first confirmation is missed. Automatic write retries are not used.
+  The latest UI fix stabilizes the parameter/value/status columns while
+  progress states change, including small-screen layouts.
+- **Canonical source commit / exact embedded firmware build ID:**
+  `993233c4fcf69d2cb94adc9c0626a0957947c382` / `993233c4fcf6`.
+  The public source-export Git commit is a *different* identifier. The
+  official binary is from the original exact ESP-IDF build and is not rebuilt
+  from the exported source commit.
+- **Signed application-only Cloud OTA:** `1,603,504` bytes; SHA-256
+  `0f25f4a152e95568c437ec96be734eabea8ce051f7a7bfd039eb3e786be4949a`.
+  Its detached ECDSA-P256 signature was generated off the Cloud server and
+  verified against the embedded public verification key. **This image is
+  not the USB installation image.**
+- **Full USB installer for classic ESP32 with 4 MB Flash:**
+  `WattPost-ESP32-full.bin`, `1,734,576` bytes; SHA-256
+  `bb4c4fdfc5d1cfe7ff9be1699910f9ef0d160a73d1727e7f4f80e5996fff672e`.
+  Install at flash offset `0x0` for a **new or deliberately reset** device.
+  Verified component offsets: `0x1000` bootloader, `0x8000` partition table,
+  `0xF000` initial OTA data and `0x20000` original signed-OTA application.
+  Do **not** use the full image to update an already configured ESP32:
+  it includes bootloader/initial OTA data, and USB flashing can overwrite
+  existing configuration. Use the signed Cloud OTA instead.
+- **Release validation:** 227 host/C tests, 6 development proxy tests,
+  264 serial Web regression tests and one clean ESP-IDF 5.5.5 build passed.
+  Chromium geometry checks at 1120/800/700/600/390/320 px verified stable
+  numeric columns and no horizontal overflow. The application contains 27
+  production web assets and leaves 297,040 bytes free in the smaller OTA slot.
+  No partition layout, NVS or History format changes.
+- **Cloud rollout:** published as public-to-all-devices signed Cloud release
+  ID `28`. Two reachable paired devices independently installed and reported
+  `V20.0.13 / 993233c4fcf6`, OTA `success`; an offline third device had not
+  yet installed at release verification. Cloud OTA and GitHub distribution
+  are separate. No test writes to BMS settings were performed during rollout.
+- **History, secrets and scope:** official matching ELF and signing material
+  remain private; no Cloud backend, database, device credentials, signing key,
+  private coredumps or internal engineering notes belong in this repository.
+
 ## V20.0.4 (2026-11-04)
 
 - **Firmware/web version:** `V20.0.4`. When a JK BMS BLE connection fails,

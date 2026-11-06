@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "jk_bms_parser.h"
+#include "jk_bms_write_transaction.h"
 
 #define JK_BMS_BLE_ADDRESS_LEN 6u
 #define JK_BMS_BLE_SCAN_MAX_CANDIDATES 12u
@@ -145,3 +146,55 @@ bool jk_bms_ble_get_data(jk_bms_data_t *data);
 bool jk_bms_ble_get_settings(jk_bms_settings_t *settings);
 bool jk_bms_ble_get_device_info(jk_bms_device_info_t *device_info);
 
+/* Asynchronous write transaction for trusted local LAN only.
+ * The caller must validate the local request and supported parameters.
+ * Never expose this operation through WattPost Cloud.
+ */
+typedef enum {
+    JK_BMS_BLE_WRITE_START_OK = 0,
+    JK_BMS_BLE_WRITE_START_UNSUPPORTED,
+    JK_BMS_BLE_WRITE_START_INVALID,
+    JK_BMS_BLE_WRITE_START_STALE_VALUE,
+    JK_BMS_BLE_WRITE_START_STALE_CONNECTION,
+    JK_BMS_BLE_WRITE_START_NOT_READY,
+    JK_BMS_BLE_WRITE_START_UNSUPPORTED_MODEL,
+    JK_BMS_BLE_WRITE_START_BUSY,
+} jk_bms_ble_write_start_result_t;
+
+typedef struct {
+    uint32_t generation;
+    jk_bms_write_tx_state_t state;
+    jk_bms_write_reason_t reason;
+    const char *api_key;
+} jk_bms_ble_write_snapshot_t;
+
+typedef struct {
+    uint32_t connection_epoch;
+    bool model_supported;
+    bool write_ready;
+} jk_bms_ble_write_policy_t;
+
+/* A connection-specific generation, not a durable device identifier.
+ * The HTTP client must submit it on EVERY attempted mutation.
+ */
+bool jk_bms_ble_write_policy_snapshot(jk_bms_ble_write_policy_t *policy);
+
+jk_bms_ble_write_start_result_t jk_bms_ble_write_start(
+    const char *api_key, double value, double expected_before,
+    uint32_t expected_connection_epoch, uint32_t *generation);
+bool jk_bms_ble_write_snapshot(jk_bms_ble_write_snapshot_t *snapshot);
+
+
+/* Local-only, explicit read-only BMS 0x96 refresh for retry decisions.
+ * A new settings frame from the SAME BLE epoch is required for success.
+ */
+typedef struct {
+    uint32_t generation;
+    uint32_t connection_epoch;
+    uint32_t received_count;
+    jk_bms_refresh_state_t state;
+    jk_bms_refresh_reason_t reason;
+} jk_bms_ble_refresh_snapshot_t;
+
+bool jk_bms_ble_settings_refresh_start(uint32_t *generation);
+bool jk_bms_ble_settings_refresh_snapshot(jk_bms_ble_refresh_snapshot_t *snapshot);

@@ -145,7 +145,10 @@ class ProductionWebBundleTest(unittest.TestCase):
                     )
                     self.assertEqual(unpacked, expected_source.read_bytes())
 
-            self.assertLess(total_size, 285_000)
+            # Fresh read/retry UX and reason-specific bilingual diagnostics add
+            # ~2 KiB gzip. Keep a tight bundle budget; app_check_size separately
+            # verifies the unchanged OTA slot has sufficient space.
+            self.assertLess(total_size, 300_000)
 
     def test_static_assets_do_not_use_immutable_cache_without_hashed_urls(self):
         server_source = (PROJECT_ROOT / "main" / "main.c").read_text()

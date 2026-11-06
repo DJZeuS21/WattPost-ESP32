@@ -2,6 +2,9 @@
 set -eu
 python3 -m unittest discover -s tests
 test_binary="$(mktemp)"
+write_codec_binary="$(mktemp)"
+write_transaction_binary="$(mktemp)"
+write_request_binary="$(mktemp)"
 recovery_binary="$(mktemp)"
 boot_button_binary="$(mktemp)"
 mdns_binary="$(mktemp)"
@@ -25,10 +28,24 @@ security_binary="$(mktemp)"
 captive_dns_binary="$(mktemp)"
 ble_candidate_binary="$(mktemp)"
 query_binary="$(mktemp)"
-trap 'rm -f "$test_binary" "$recovery_binary" "$boot_button_binary" "$mdns_binary" "$history_binary" "$storage_binary" "$temp_res_binary" "$json_binary" "$nvs_binary" "$config_binary" "$identity_binary" "$cloud_policy_binary" "$cloud_format_binary" "$cloud_history_binary" "$settings_json_binary" "$wifi_policy_binary" "$bms_policy_binary" "$internet_policy_binary" "$setup_access_binary" "$provision_policy_binary" "$security_binary" "$captive_dns_binary" "$ble_candidate_binary" "$query_binary"' EXIT
+trap 'rm -f "$test_binary" "$write_codec_binary" "$write_transaction_binary" "$write_request_binary" "$recovery_binary" "$boot_button_binary" "$mdns_binary" "$history_binary" "$storage_binary" "$temp_res_binary" "$json_binary" "$nvs_binary" "$config_binary" "$identity_binary" "$cloud_policy_binary" "$cloud_format_binary" "$cloud_history_binary" "$settings_json_binary" "$wifi_policy_binary" "$bms_policy_binary" "$internet_policy_binary" "$setup_access_binary" "$provision_policy_binary" "$security_binary" "$captive_dns_binary" "$ble_candidate_binary" "$query_binary"' EXIT
 cc -std=c11 -Wall -Wextra -Werror -I main \
   tests/test_jk_bms_parser.c main/jk_bms_parser.c -o "$test_binary"
 "$test_binary"
+cc -std=c11 -Wall -Wextra -Werror -I main \
+  tests/test_jk_bms_write_codec.c main/jk_bms_write_codec.c -lm -o "$write_codec_binary"
+"$write_codec_binary"
+cc -std=c11 -Wall -Wextra -Werror -I main \
+  tests/test_jk_bms_write_transaction.c main/jk_bms_write_transaction.c \
+  main/jk_bms_write_codec.c -lm -o "$write_transaction_binary"
+"$write_transaction_binary"
+cc -std=c11 -Wall -Wextra -Werror -I main \
+  -I ../.local-tools/esp-idf/components/json/cJSON \
+  tests/test_bms_write_request.c main/bms_write_request.c \
+  main/jk_bms_write_codec.c \
+  ../.local-tools/esp-idf/components/json/cJSON/cJSON.c \
+  -lm -o "$write_request_binary"
+"$write_request_binary"
 cc -std=c11 -Wall -Wextra -Werror -I main \
   tests/test_recovery_policy.c -o "$recovery_binary"
 "$recovery_binary"

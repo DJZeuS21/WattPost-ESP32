@@ -14,7 +14,7 @@
     cloudManage: true,
     systemReboot: true,
     systemFactoryReset: true,
-    bmsSettingsWrite: false,
+    bmsSettingsWrite: true,
     firmwareOta: true,
     firmwareOtaPreference: true,
     accountControls: false,
@@ -140,6 +140,33 @@
 
     fetchSettings(options = {}) {
       return this.#request('/api/settings', options);
+    }
+
+    async fetchBmsWritePolicy() {
+      const payload = await this.#deviceRequest('/api/device/bms/settings/write-policy');
+      return payload.data || null;
+    }
+
+    async fetchBmsWriteOperation() {
+      const payload = await this.#deviceRequest('/api/device/bms/settings/write');
+      return payload.data || null;
+    }
+
+    async startBmsSettingsRefresh() {
+      const payload = await this.#protectedMutation(
+        '/api/device/bms/settings/refresh', {});
+      return payload.data || null;
+    }
+
+    async fetchBmsSettingsRefresh() {
+      const payload = await this.#deviceRequest('/api/device/bms/settings/refresh');
+      return payload.data || null;
+    }
+
+    async startBmsSettingWrite(change) {
+      const payload = await this.#protectedMutation(
+        '/api/device/bms/settings/write', change);
+      return payload.data || null;
     }
 
     async fetchDeviceStatus(options = {}) {

@@ -28,7 +28,8 @@ endif()
 file(GLOB_RECURSE WEB_EMBED_FILES "${WEB_BUILD_DIR}/*.gz")
 
 idf_component_register(
-    SRCS "main.c" "ble_candidate_policy.c" "captive_dns.c" "captive_dns_protocol.c" "cloud_transport.c" "cloud_transport_format.c" "cloud_history_format.c" "cloud_transport_policy.c" "device_config.c" "device_identity.c" "device_identity_random.c" "setup_access.c" "local_api_security.c" "provisioning_policy.c" "remote_ota.c" "history.c" "history_query.c" "jk_bms_ble.c" "jk_bms_parser.c" "json_writer.c" "settings_json.c" "temperature_profiles.c"
+    SRCS "main.c" "ble_candidate_policy.c" "captive_dns.c" "captive_dns_protocol.c" "cloud_transport.c" "cloud_transport_format.c" "cloud_history_format.c" "cloud_transport_policy.c" "device_config.c" "device_identity.c" "device_identity_random.c" "setup_access.c" "local_api_security.c" "provisioning_policy.c" "remote_ota.c" "history.c" "history_query.c" "jk_bms_ble.c" "jk_bms_parser.c" "jk_bms_write_codec.c"
+    "bms_write_request.c" "jk_bms_write_transaction.c" "json_writer.c" "settings_json.c" "temperature_profiles.c"
     INCLUDE_DIRS "." "${CMAKE_BINARY_DIR}" "${WEB_BUILD_DIR}"
 
     EMBED_FILES ${WEB_EMBED_FILES}

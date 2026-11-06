@@ -29,6 +29,7 @@
 #include "nvs_flash.h"
 
 #include "bms_runtime_policy.h"
+#include "bms_write_request.h"
 #include "boot_button_policy.h"
 #include "captive_dns.h"
 #include "cloud_transport.h"
@@ -4800,6 +4801,301 @@ static esp_err_t settings_handler(httpd_req_t *request) {
     return result;
 }
 
+/*
+ * BMS configuration writes are deliberately local-only. No additional
+ * password: the product trusts normal STA LAN access, as for the other local
+ * device mutations. First Setup/Recovery AP are not that trusted LAN.
+ */
+static bool bms_write_lan_available(void) {
+    return device_wifi_configured && wifi_has_ip &&
+           !first_setup_ap_active && !recovery_ap_active;
+}
+
+static esp_err_t bms_write_policy_handler(httpd_req_t *request) {
+    httpd_resp_set_hdr(request, "Cache-Control", "no-store");
+    if (!local_request_host_allowed(request)) {
+        return device_api_error(request, "403 Forbidden", "forbidden_origin");
+    }
+
+    jk_bms_ble_write_policy_t policy = {0};
+    if (!jk_bms_ble_write_policy_snapshot(&policy)) {
+        return device_api_error(
+            request, "503 Service Unavailable", "subsystem_unavailable");
+    }
+    const bool available = bms_write_lan_available() && policy.write_ready;
+    if (!bms_write_lan_available()) {
+        policy.connection_epoch = 0u;
+    }
+    char *response = malloc(3072u);
+    if (response == NULL) {
+        return device_api_error(
+            request, "503 Service Unavailable", "memory_unavailable");
+    }
+
+    size_t used = 0u;
+    bool ok = wattpost_json_appendf(
+        response, 3072u, &used,
+        "{\"ok\":true,\"data\":{"
+        "\"local_write_available\":%s,"
+        "\"model_supported\":%s,"
+        "\"connection_epoch\":%lu,"
+        "\"writable_keys\":[",
+        available ? "true" : "false",
+        policy.model_supported ? "true" : "false",
+        (unsigned long) policy.connection_epoch);
+    if (ok && policy.model_supported && bms_write_lan_available()) {
+        size_t count = 0u;
+        const jk_bms_write_spec_t *specs = jk_bms_write_specs(&count);
+        for (size_t i = 0; i < count && ok; ++i) {
+            ok = wattpost_json_appendf(
+                response, 3072u, &used,
+                "%s\"%s\"", i == 0u ? "" : ",", specs[i].api_key);
+        }
+    }
+    if (ok) {
+        ok = wattpost_json_appendf(response, 3072u, &used, "]}}");
+    }
+    if (!ok) {
+        free(response);
+        return device_api_error(
+            request, "500 Internal Server Error", "internal_error");
+    }
+    httpd_resp_set_type(request, "application/json");
+    const esp_err_t result = httpd_resp_sendstr(request, response);
+    free(response);
+    return result;
+}
+
+static const char *bms_write_state_str(jk_bms_write_tx_state_t state) {
+    switch (state) {
+        case JK_BMS_WRITE_TX_QUEUED: return "queued";
+        case JK_BMS_WRITE_TX_SENDING: return "sending";
+        case JK_BMS_WRITE_TX_READ_QUEUED: return "read_queued";
+        case JK_BMS_WRITE_TX_READING: return "reading";
+        case JK_BMS_WRITE_TX_VERIFYING: return "verifying";
+        case JK_BMS_WRITE_TX_VERIFIED: return "verified";
+        case JK_BMS_WRITE_TX_MISMATCH: return "mismatch";
+        case JK_BMS_WRITE_TX_UNCERTAIN: return "uncertain";
+        case JK_BMS_WRITE_TX_NOT_SENT: return "not_sent";
+        default: return "idle";
+    }
+}
+
+static const char *bms_write_reason_str(jk_bms_write_reason_t reason) {
+    switch (reason) {
+        case JK_BMS_WRITE_REASON_QUEUE_TIMEOUT: return "queue_timeout";
+        case JK_BMS_WRITE_REASON_LINK_CHANGED: return "link_changed";
+        case JK_BMS_WRITE_REASON_WRITE_TRANSPORT: return "write_transport";
+        case JK_BMS_WRITE_REASON_READ_TRANSPORT: return "read_transport";
+        case JK_BMS_WRITE_REASON_READBACK_TIMEOUT: return "readback_timeout";
+        case JK_BMS_WRITE_REASON_OPERATION_TIMEOUT: return "operation_timeout";
+        default: return "none";
+    }
+}
+
+static const char *bms_refresh_state_str(jk_bms_refresh_state_t state) {
+    switch (state) {
+        case JK_BMS_REFRESH_QUEUED: return "queued";
+        case JK_BMS_REFRESH_REQUESTING: return "requesting";
+        case JK_BMS_REFRESH_WAITING: return "waiting";
+        case JK_BMS_REFRESH_RECEIVED: return "received";
+        case JK_BMS_REFRESH_UNAVAILABLE: return "unavailable";
+        default: return "idle";
+    }
+}
+
+static const char *bms_refresh_reason_str(jk_bms_refresh_reason_t reason) {
+    switch (reason) {
+        case JK_BMS_REFRESH_REASON_LINK_CHANGED: return "link_changed";
+        case JK_BMS_REFRESH_REASON_QUEUE_TIMEOUT: return "queue_timeout";
+        case JK_BMS_REFRESH_REASON_READ_TRANSPORT: return "read_transport";
+        case JK_BMS_REFRESH_REASON_READ_TIMEOUT: return "read_timeout";
+        default: return "none";
+    }
+}
+
+static esp_err_t bms_refresh_status_handler(httpd_req_t *request) {
+    httpd_resp_set_hdr(request, "Cache-Control", "no-store");
+    if (!local_request_host_allowed(request)) {
+        return device_api_error(request, "403 Forbidden", "forbidden_origin");
+    }
+    jk_bms_ble_refresh_snapshot_t snapshot = {0};
+    if (!jk_bms_ble_settings_refresh_snapshot(&snapshot)) {
+        return device_api_error(
+            request, "503 Service Unavailable", "subsystem_unavailable");
+    }
+    char response[232];
+    const int size = snprintf(response, sizeof(response),
+        "{\"ok\":true,\"data\":{\"operation\":{"
+        "\"generation\":%lu,\"connection_epoch\":%lu,"
+        "\"received_count\":%lu,\"state\":\"%s\",\"reason\":\"%s\"}}}",
+        (unsigned long) snapshot.generation,
+        (unsigned long) snapshot.connection_epoch,
+        (unsigned long) snapshot.received_count,
+        bms_refresh_state_str(snapshot.state),
+        bms_refresh_reason_str(snapshot.reason));
+    if (size <= 0 || (size_t) size >= sizeof(response)) {
+        return device_api_error(request, "500 Internal Server Error", "internal_error");
+    }
+    httpd_resp_set_type(request, "application/json");
+    return httpd_resp_sendstr(request, response);
+}
+
+static esp_err_t bms_refresh_start_handler(httpd_req_t *request) {
+    if (!local_mutation_request_allowed(request)) return ESP_OK;
+    httpd_resp_set_hdr(request, "Cache-Control", "no-store");
+    if (!bms_write_lan_available()) {
+        return device_api_error(request, "403 Forbidden", "local_network_required");
+    }
+    /* No user-controlled fields are accepted; a read-only BLE 0x96 request.
+     * Consume the JSON {} body to keep the HTTP connection in sync. */
+    if (request->content_len != 2) {
+        return device_api_error(request, "400 Bad Request", "invalid_request");
+    }
+    char body[2];
+    size_t received = 0;
+    while (received < sizeof(body)) {
+        int n = httpd_req_recv(request, body + received, sizeof(body) - received);
+        if (n <= 0) return device_api_error(request, "400 Bad Request", "invalid_request");
+        received += (size_t) n;
+    }
+    if (body[0] != '{' || body[1] != '}') {
+        return device_api_error(request, "400 Bad Request", "invalid_request");
+    }
+    uint32_t generation = 0;
+    if (!jk_bms_ble_settings_refresh_start(&generation)) {
+        return device_api_error(request, "409 Conflict", "bms_unavailable_or_busy");
+    }
+    char response[128];
+    const int size = snprintf(response, sizeof(response),
+        "{\"ok\":true,\"data\":{\"operation\":{"
+        "\"generation\":%lu,\"state\":\"queued\"}}}",
+        (unsigned long) generation);
+    if (size <= 0 || (size_t) size >= sizeof(response)) {
+        return device_api_error(request, "500 Internal Server Error", "internal_error");
+    }
+    httpd_resp_set_status(request, "202 Accepted");
+    httpd_resp_set_type(request, "application/json");
+    return httpd_resp_sendstr(request, response);
+}
+
+static esp_err_t bms_write_status_handler(httpd_req_t *request) {
+    httpd_resp_set_hdr(request, "Cache-Control", "no-store");
+    if (!local_request_host_allowed(request)) {
+        return device_api_error(request, "403 Forbidden", "forbidden_origin");
+    }
+
+    jk_bms_ble_write_snapshot_t snapshot = {0};
+    if (!jk_bms_ble_write_snapshot(&snapshot)) {
+        return device_api_error(
+            request, "503 Service Unavailable", "subsystem_unavailable");
+    }
+    /* api_key points into the static codec allowlist, never user input. */
+    char response[256];
+    const int written = snprintf(
+        response, sizeof(response),
+        "{\"ok\":true,\"data\":{\"operation\":{"
+        "\"generation\":%lu,\"state\":\"%s\","
+        "\"key\":\"%s\",\"reason\":\"%s\"}}}",
+        (unsigned long) snapshot.generation,
+        bms_write_state_str(snapshot.state),
+        snapshot.api_key ? snapshot.api_key : "",
+        bms_write_reason_str(snapshot.reason));
+    if (written <= 0 || (size_t) written >= sizeof(response)) {
+        return device_api_error(
+            request, "500 Internal Server Error", "internal_error");
+    }
+    httpd_resp_set_type(request, "application/json");
+    return httpd_resp_sendstr(request, response);
+}
+
+static esp_err_t bms_write_start_handler(httpd_req_t *request) {
+    if (!local_mutation_request_allowed(request)) {
+        return ESP_OK;
+    }
+    httpd_resp_set_hdr(request, "Cache-Control", "no-store");
+    if (!bms_write_lan_available()) {
+        return device_api_error(
+            request, "403 Forbidden", "local_network_required");
+    }
+    if (request->content_len <= 0) {
+        return device_api_error(
+            request, "400 Bad Request", "invalid_request");
+    }
+    if ((size_t) request->content_len > 256u) {
+        return device_api_error(
+            request, "413 Payload Too Large", "content_too_large");
+    }
+    char body[257] = {0};
+    size_t received_total = 0u;
+    while (received_total < (size_t) request->content_len) {
+        const int received = httpd_req_recv(
+            request, body + received_total,
+            (size_t) request->content_len - received_total);
+        if (received <= 0) {
+            return device_api_error(
+                request, "400 Bad Request", "invalid_request");
+        }
+        received_total += (size_t) received;
+    }
+    body[received_total] = '\0';
+    wattpost_bms_write_request_t change = {0};
+    const wattpost_bms_write_request_result_t parsed =
+        wattpost_bms_write_request_parse(body, received_total, &change);
+    memset(body, 0, sizeof(body));
+    if (parsed != WATTPOST_BMS_WRITE_REQUEST_OK) {
+        return device_api_error(
+            request, "400 Bad Request",
+            parsed == WATTPOST_BMS_WRITE_REQUEST_UNSUPPORTED
+                ? "unsupported_setting" : "invalid_request");
+    }
+
+    uint32_t generation = 0u;
+    const jk_bms_ble_write_start_result_t started =
+        jk_bms_ble_write_start(
+            change.key, change.value, change.expected_before,
+            change.connection_epoch, &generation);
+    memset(&change, 0, sizeof(change));
+    switch (started) {
+        case JK_BMS_BLE_WRITE_START_OK:
+            break;
+        case JK_BMS_BLE_WRITE_START_STALE_CONNECTION:
+            return device_api_error(
+                request, "412 Precondition Failed", "stale_connection");
+        case JK_BMS_BLE_WRITE_START_STALE_VALUE:
+            return device_api_error(
+                request, "412 Precondition Failed", "stale_setting");
+        case JK_BMS_BLE_WRITE_START_BUSY:
+            return device_api_error(request, "409 Conflict", "busy");
+        case JK_BMS_BLE_WRITE_START_NOT_READY:
+            return device_api_error(
+                request, "503 Service Unavailable", "bms_unavailable");
+        case JK_BMS_BLE_WRITE_START_UNSUPPORTED_MODEL:
+            return device_api_error(
+                request, "422 Unprocessable Entity", "unsupported_model");
+        case JK_BMS_BLE_WRITE_START_UNSUPPORTED:
+            return device_api_error(
+                request, "400 Bad Request", "unsupported_setting");
+        default:
+            return device_api_error(
+                request, "400 Bad Request", "invalid_request");
+    }
+
+    char response[128];
+    const int written = snprintf(
+        response, sizeof(response),
+        "{\"ok\":true,\"data\":{\"operation\":{"
+        "\"generation\":%lu,\"state\":\"queued\"}}}",
+        (unsigned long) generation);
+    if (written <= 0 || (size_t) written >= sizeof(response)) {
+        return device_api_error(
+            request, "500 Internal Server Error", "internal_error");
+    }
+    httpd_resp_set_status(request, "202 Accepted");
+    httpd_resp_set_type(request, "application/json");
+    return httpd_resp_sendstr(request, response);
+}
+
 static esp_err_t temperature_config_get_handler(httpd_req_t *request) {
     temp_detection_mode_t mode;
     int8_t manual_mask;
@@ -4916,145 +5212,174 @@ static void start_server(void) {
         return;
     }
 
+    /* This function also runs from IP_EVENT on the small sys_evt stack.
+     * URI descriptors are permanent and never need automatic stack storage.
+     * Keep all 30 in read-only static storage instead.
+     */
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 27;
+    config.max_uri_handlers = 32;
     config.stack_size = 8192;
     config.lru_purge_enable = true;
     config.send_wait_timeout = 20;
     config.uri_match_fn = httpd_uri_match_wildcard;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
 
-    const httpd_uri_t live = {
+    static const httpd_uri_t live = {
         .uri = "/api/live",
         .method = HTTP_GET,
         .handler = live_handler,
     };
-    const httpd_uri_t history = {
+    static const httpd_uri_t history = {
         .uri = "/api/history",
         .method = HTTP_GET,
         .handler = history_handler,
     };
-    const httpd_uri_t settings = {
+    static const httpd_uri_t settings = {
         .uri = "/api/settings",
         .method = HTTP_GET,
         .handler = settings_handler,
     };
-    const httpd_uri_t temp_config_get = {
+    static const httpd_uri_t bms_write_policy_get = {
+        .uri = "/api/device/bms/settings/write-policy",
+        .method = HTTP_GET,
+        .handler = bms_write_policy_handler,
+    };
+    static const httpd_uri_t bms_write_status_get = {
+        .uri = "/api/device/bms/settings/write",
+        .method = HTTP_GET,
+        .handler = bms_write_status_handler,
+    };
+    static const httpd_uri_t bms_write_start_post = {
+        .uri = "/api/device/bms/settings/write",
+        .method = HTTP_POST,
+        .handler = bms_write_start_handler,
+    };
+    static const httpd_uri_t bms_refresh_status_get = {
+        .uri = "/api/device/bms/settings/refresh",
+        .method = HTTP_GET,
+        .handler = bms_refresh_status_handler,
+    };
+    static const httpd_uri_t bms_refresh_start_post = {
+        .uri = "/api/device/bms/settings/refresh",
+        .method = HTTP_POST,
+        .handler = bms_refresh_start_handler,
+    };
+    static const httpd_uri_t temp_config_get = {
         .uri = "/api/config/temperature",
         .method = HTTP_GET,
         .handler = temperature_config_get_handler,
     };
-    const httpd_uri_t temp_config_post = {
+    static const httpd_uri_t temp_config_post = {
         .uri = "/api/config/temperature",
         .method = HTTP_POST,
         .handler = temperature_config_post_handler,
     };
-    const httpd_uri_t request_token_uri = {
+    static const httpd_uri_t request_token_uri = {
         .uri = "/api/device/request-token",
         .method = HTTP_GET,
         .handler = request_token_handler,
     };
-    const httpd_uri_t device_status_uri = {
+    static const httpd_uri_t device_status_uri = {
         .uri = "/api/device/status",
         .method = HTTP_GET,
         .handler = device_status_handler,
     };
-    const httpd_uri_t wifi_scan_post = {
+    static const httpd_uri_t wifi_scan_post = {
         .uri = "/api/device/wifi/scan",
         .method = HTTP_POST,
         .handler = wifi_scan_start_handler,
     };
-    const httpd_uri_t wifi_scan_get = {
+    static const httpd_uri_t wifi_scan_get = {
         .uri = "/api/device/wifi/scan",
         .method = HTTP_GET,
         .handler = wifi_scan_get_handler,
     };
-    const httpd_uri_t wifi_configure_post = {
+    static const httpd_uri_t wifi_configure_post = {
         .uri = "/api/device/wifi/configure",
         .method = HTTP_POST,
         .handler = wifi_configure_start_handler,
     };
-    const httpd_uri_t wifi_reconnect_post = {
+    static const httpd_uri_t wifi_reconnect_post = {
         .uri = "/api/device/wifi/reconnect",
         .method = HTTP_POST,
         .handler = wifi_reconnect_handler,
     };
-    const httpd_uri_t wifi_reset_post = {
+    static const httpd_uri_t wifi_reset_post = {
         .uri = "/api/device/wifi/reset",
         .method = HTTP_POST,
         .handler = wifi_reset_handler,
     };
-    const httpd_uri_t setup_finish_post = {
+    static const httpd_uri_t setup_finish_post = {
         .uri = "/api/device/setup/finish",
         .method = HTTP_POST,
         .handler = setup_finish_without_bms_handler,
     };
-    const httpd_uri_t bms_scan_post = {
+    static const httpd_uri_t bms_scan_post = {
         .uri = "/api/device/bms/scan",
         .method = HTTP_POST,
         .handler = bms_scan_start_handler,
     };
-    const httpd_uri_t bms_scan_get = {
+    static const httpd_uri_t bms_scan_get = {
         .uri = "/api/device/bms/scan",
         .method = HTTP_GET,
         .handler = bms_scan_get_handler,
     };
-    const httpd_uri_t bms_select_post = {
+    static const httpd_uri_t bms_select_post = {
         .uri = "/api/device/bms/select",
         .method = HTTP_POST,
         .handler = bms_select_start_handler,
     };
-    const httpd_uri_t bms_reconnect_post = {
+    static const httpd_uri_t bms_reconnect_post = {
         .uri = "/api/device/bms/reconnect",
         .method = HTTP_POST,
         .handler = bms_reconnect_handler,
     };
-    const httpd_uri_t bms_forget_post = {
+    static const httpd_uri_t bms_forget_post = {
         .uri = "/api/device/bms/forget",
         .method = HTTP_POST,
         .handler = bms_forget_handler,
     };
-    const httpd_uri_t firmware_update_get = {
+    static const httpd_uri_t firmware_update_get = {
         .uri = "/api/device/ota",
         .method = HTTP_GET,
         .handler = firmware_update_status_handler,
     };
-    const httpd_uri_t firmware_update_preferences_put = {
+    static const httpd_uri_t firmware_update_preferences_put = {
         .uri = "/api/device/ota/preferences",
         .method = HTTP_PUT,
         .handler = firmware_update_preferences_handler,
     };
-    const httpd_uri_t firmware_update_install_post = {
+    static const httpd_uri_t firmware_update_install_post = {
         .uri = "/api/device/ota/install",
         .method = HTTP_POST,
         .handler = firmware_update_install_handler,
     };
-    const httpd_uri_t cloud_pair_post = {
+    static const httpd_uri_t cloud_pair_post = {
         .uri = "/api/device/cloud/pair",
         .method = HTTP_POST,
         .handler = cloud_pair_start_handler,
     };
-    const httpd_uri_t cloud_disconnect_post = {
+    static const httpd_uri_t cloud_disconnect_post = {
         .uri = "/api/device/cloud/disconnect",
         .method = HTTP_POST,
         .handler = cloud_disconnect_handler,
     };
-    const httpd_uri_t system_reboot_post = {
+    static const httpd_uri_t system_reboot_post = {
         .uri = "/api/device/system/reboot",
         .method = HTTP_POST,
         .handler = system_reboot_handler,
     };
-    const httpd_uri_t system_factory_reset_post = {
+    static const httpd_uri_t system_factory_reset_post = {
         .uri = "/api/device/system/factory-reset",
         .method = HTTP_POST,
         .handler = system_factory_reset_handler,
     };
-    const httpd_uri_t diagnostics_uri = {
+    static const httpd_uri_t diagnostics_uri = {
         .uri = "/api/diagnostics",
         .method = HTTP_GET,
         .handler = diagnostics_handler,
     };
-    const httpd_uri_t web = {
+    static const httpd_uri_t web = {
         .uri = "*",
         .method = HTTP_GET,
         .handler = web_asset_handler,
@@ -5062,6 +5387,11 @@ static void start_server(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &live));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &history));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &settings));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &bms_write_policy_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &bms_write_status_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &bms_write_start_post));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &bms_refresh_status_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &bms_refresh_start_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &temp_config_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &temp_config_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &request_token_uri));

@@ -176,7 +176,9 @@ class BmsReconnectForgetSourceTests(unittest.TestCase):
         gap = ble_block("static int gap_event", "static void on_reset")
         self.assertIn("accept_connection = configured || selection_active", gap)
         self.assertIn("Ігнорування BLE connection після forget", gap)
-        self.assertIn("accept_notification = configured || selection_active", gap)
+        self.assertIn("accept_notification = connected &&", gap)
+        self.assertIn("(configured || selection_active)", gap)
+        self.assertIn("event->notify_rx.conn_handle == connection_handle", gap)
 
     def test_forget_blocks_other_user_operations(self):
         scan = ble_block(

@@ -996,6 +996,75 @@
       return result;
     }
 
+    /*
+     * Trusted local LAN BMS write workflow. Never available over Cloud.
+     * The ESP32 validates Host/Origin/request-token, settings key,
+     * expected_before and the specific BLE connection epoch on every write;
+     * the JS capability alone must never grant access.
+     */
+    _requireLocalBmsWrite(method) {
+      if (this.runtimeContext?.mode !== 'local' ||
+          this.capabilities.bmsSettingsWrite !== true ||
+          typeof this.transport[method] !== 'function') {
+        throw new DeviceApiError('capability_unavailable', 0, null);
+      }
+    }
+
+    async fetchBmsWritePolicy() {
+      this._requireLocalBmsWrite('fetchBmsWritePolicy');
+      return this.transport.fetchBmsWritePolicy();
+    }
+
+    async startBmsSettingWrite(change) {
+      this._requireLocalBmsWrite('startBmsSettingWrite');
+      return this.transport.startBmsSettingWrite(change);
+    }
+
+    async waitForBmsSettingWrite(generation, { timeoutMs = 45000, intervalMs = 650 } = {}) {
+      this._requireLocalBmsWrite('fetchBmsWriteOperation');
+      if (!Number.isSafeInteger(generation) || generation <= 0) {
+        throw new DeviceApiError('invalid_request', 0, null);
+      }
+      const deadline = Date.now() + timeoutMs;
+      const terminals = new Set(['verified', 'mismatch', 'uncertain', 'not_sent']);
+      while (Date.now() < deadline) {
+        const response = await this.transport.fetchBmsWriteOperation();
+        const operation = response?.operation || response;
+        if (operation?.generation !== generation) {
+          return { generation, state: 'uncertain', reason: 'operation_changed' };
+        }
+        if (terminals.has(operation.state)) {
+          return operation;
+        }
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+      }
+      return { generation, state: 'uncertain', reason: 'browser_timeout' };
+    }
+
+    async refreshBmsSettingsRead({ timeoutMs = 28000, intervalMs = 650 } = {}) {
+      this._requireLocalBmsWrite('startBmsSettingsRefresh');
+      this._requireLocalBmsWrite('fetchBmsSettingsRefresh');
+      const started = await this.transport.startBmsSettingsRefresh();
+      const generation = started?.operation?.generation;
+      if (!Number.isSafeInteger(generation) || generation <= 0) {
+        throw new DeviceApiError('invalid_response', 0, null);
+      }
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        const status = await this.transport.fetchBmsSettingsRefresh();
+        const operation = status?.operation;
+        if (operation?.generation !== generation) {
+          throw new DeviceApiError('refresh_superseded', 0, null);
+        }
+        if (operation.state === 'received') return operation;
+        if (operation.state === 'unavailable') {
+          throw new DeviceApiError('refresh_' + (operation.reason || 'failed'), 0, null);
+        }
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+      }
+      throw new DeviceApiError('refresh_browser_timeout', 0, null);
+    }
+
     async fetchSettings() {
       if (!this.capabilities.bmsSettingsRead) return null;
       if (this._isFetchingSettings && this._activeSettingsPromise) {
