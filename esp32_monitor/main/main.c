@@ -2271,6 +2271,22 @@ static esp_err_t device_status_handler(httpd_req_t *request) {
             cloud_action_error);
     }
 
+    jk_bms_ble_rssi_snapshot_t bms_rssi = {0};
+    (void) jk_bms_ble_rssi_snapshot(&bms_rssi);
+    char bms_current_rssi_json[8] = "null";
+    char bms_last_rssi_json[8] = "null";
+    char bms_rssi_age_json[16] = "null";
+    if (bms_rssi.valid) {
+        snprintf(bms_last_rssi_json, sizeof(bms_last_rssi_json),
+                 "%d", (int) bms_rssi.dbm);
+        snprintf(bms_rssi_age_json, sizeof(bms_rssi_age_json),
+                 "%lu", (unsigned long) bms_rssi.age_s);
+        if (bms_rssi.current) {
+            snprintf(bms_current_rssi_json, sizeof(bms_current_rssi_json),
+                     "%d", (int) bms_rssi.dbm);
+        }
+    }
+
     char history_context[64];
     history_context_string(history_context);
     size_t used = 0u;
@@ -2302,7 +2318,9 @@ static esp_err_t device_status_handler(httpd_req_t *request) {
             "\"name\":\"%s\","
             "\"model\":\"%s\","
             "\"address_hint\":\"%s\","
-            "\"rssi_dbm\":null,"
+            "\"rssi_dbm\":%s,"
+            "\"rssi_last_dbm\":%s,"
+            "\"rssi_last_age_s\":%s,"
             "\"operation\":{"
             "\"generation\":%lu,"
             "\"state\":\"%s\","
@@ -2352,6 +2370,9 @@ static esp_err_t device_status_handler(httpd_req_t *request) {
             bms_name_json,
             bms_model_json,
             bms_hint_json,
+            bms_current_rssi_json,
+            bms_last_rssi_json,
+            bms_rssi_age_json,
             (unsigned long) bms_operation.generation,
             bms_operation_state_str(bms_operation.state),
             bms_operation_phase_str(bms_operation.phase),

@@ -125,6 +125,16 @@ bool jk_bms_ble_forget_commit(
 bool jk_bms_ble_operation_snapshot(jk_bms_ble_operation_snapshot_t *snapshot);
 bool jk_bms_ble_has_target(void);
 bool jk_bms_ble_is_connected(void);
+
+/* Last connected-link RSSI, retained across BLE disconnects until reboot or
+ * target change. 'current' is false for a disconnected or stale sample. */
+typedef struct {
+    bool valid;
+    bool current;
+    int8_t dbm;
+    uint32_t age_s;
+} jk_bms_ble_rssi_snapshot_t;
+bool jk_bms_ble_rssi_snapshot(jk_bms_ble_rssi_snapshot_t *snapshot);
 const char *jk_bms_ble_state(void);
 const char *jk_bms_ble_phase(void);
 uint32_t jk_bms_ble_connection_attempts(void);

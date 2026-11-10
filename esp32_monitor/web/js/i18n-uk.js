@@ -60,6 +60,8 @@ WattPostI18n.register('uk', {
   "history.tooltip_charging": "Заряджання:",
   "history.tooltip_discharging": "Розряджання:",
   "history.tooltip_soc": "Рівень заряду:",
+  "device_settings.ble_last_signal": "Останній: {rssi} dBm ({seconds} с тому)",
+  "device_settings.ble_signal": "Сигнал Bluetooth",
   "device_settings.bms_connection_title": "Підключення JK BMS",
   "device_settings.bms_found": "Знайдено JK BMS: {count}",
   "device_settings.bms_selected": "Вибрано: {name} {address}",

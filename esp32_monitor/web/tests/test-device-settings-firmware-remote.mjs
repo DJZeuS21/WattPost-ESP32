@@ -67,6 +67,7 @@ function createViewHarness() {
     'device-bms-address',
     'device-bms-model',
     'device-bms-ble',
+    'device-bms-rssi',
     'device-bms-cells',
   ];
   const nodes = Object.fromEntries(ids.map(id => [id, node()]));
@@ -467,6 +468,36 @@ test('BMS card keeps canonical status data when live telemetry arrives', async (
     assert.equal(nodes['device-bms-cells'].textContent, '7');
     view.onLive({ online: false });
     assert.equal(nodes['device-bms-cells'].textContent, '—');
+  } finally {
+    globalThis.ApiClient = previousApiClient;
+  }
+});
+
+test('BMS RSSI distinguishes live, stale, and missing samples without inventing values', async () => {
+  const { view, nodes } = createViewHarness();
+  const previousApiClient = globalThis.ApiClient;
+  let bms = {
+    configured: true, state: 'connected',
+    rssi_dbm: -56, rssi_last_dbm: -56, rssi_last_age_s: 2,
+  };
+  globalThis.ApiClient = {
+    async fetchDeviceStatus() { return { bms, wifi: {}, cloud: null }; },
+  };
+  try {
+    await view._refreshDeviceStatus();
+    assert.equal(nodes['device-bms-rssi'].textContent, '-56 dBm');
+
+    bms = { ...bms, state: 'disconnected', rssi_dbm: null, rssi_last_age_s: 34 };
+    await view._refreshDeviceStatus();
+    assert.equal(nodes['device-bms-rssi'].textContent, 'Останній: -56 dBm (34 с тому)');
+
+    bms = { ...bms, rssi_last_dbm: null, rssi_last_age_s: null };
+    await view._refreshDeviceStatus();
+    assert.equal(nodes['device-bms-rssi'].textContent, '—');
+
+    bms = { configured: true, state: 'connected' }; // older firmware
+    await view._refreshDeviceStatus();
+    assert.equal(nodes['device-bms-rssi'].textContent, '—');
   } finally {
     globalThis.ApiClient = previousApiClient;
   }

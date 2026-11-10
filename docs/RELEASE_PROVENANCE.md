@@ -1,5 +1,44 @@
 # WattPost ESP32 — release provenance and verification
 
+## V20.0.14 (2026-11-10)
+
+- **Firmware/web version:** `V20.0.14`. Reads connected-link RSSI from the
+  ESP32 NimBLE controller every 10 seconds, showing current Bluetooth signal
+  strength in Device Settings → JK BMS. After an interruption, displays the
+  last measured RSSI explicitly as *last known* with age; never treats it as
+  a current signal. Initial samples are available about two seconds after
+  connection. A failed RSSI read does not disconnect or change the BMS.
+  No BLE connection/recovery policy, BMS settings writing, NVS, History,
+  partition layout, Wi-Fi or signed OTA protocol changes.
+- **Exact firmware source commit / embedded build ID:**
+  `79a05fc6d5b8` / `79a05fc6d5b8`. The public source export is an independent
+  Git commit; the official image uses the exact tested original build,
+  not a rebuild from this public Git commit.
+- **Signed application-only Cloud OTA (not the USB image):** `1,604,768` bytes;
+  SHA-256 `c2ce250def1921abfdf3362f3fabd5c174405735be2079b38c2f60e558a1303d`.
+  Its ECDSA-P256 manifest signature was verified with the public key embedded
+  in firmware. The private signing key and exact ELF remain private.
+- **Full USB installer for classic ESP32 / 4 MB Flash:**
+  `WattPost-ESP32-full.bin`, **1,735,840 bytes**; SHA-256
+  `d0bbfa56591a0682c75967335549cea049f636ac7510f5dfe63aace750e548c7`.
+  Flash at `0x0` only for a **new/fresh** installation. Its exact component
+  bytes were verified at `0x1000` (bootloader), `0x8000` (partitions),
+  `0xF000` (initial OTA data), `0x20000` (signed-OTA app binary).
+  **Do not use this full image to update an already configured device.**
+  Use WattPost Cloud signed OTA to retain configuration and History.
+- **Official release gate:** 231 host/C, 6 development proxy, 265 Web tests;
+  exact ESP-IDF 5.5.5 clean build; 27 production web assets; 295,776 bytes
+  free in the smaller OTA slot. Standalone public checkout regression tests
+  were also performed independently. No physical USB flashing was done.
+- **Production Cloud OTA:** Global signed release **29** is already published
+  separately; two paired ESP32 units installed it automatically and reported
+  OTA `success` with exact build ID. Local physical diagnostics measured an
+  RSSI of approximately −77 to −71 dBm while connected. Such a sample alone
+  cannot establish the root cause of intermittent BLE timeouts.
+- **Security and scope:** No private Cloud server code, user/device data,
+  Wi-Fi credentials, signing material, raw coredumps or internal engineering
+  documents are published. GitHub USB distribution and Cloud OTA are separate.
+
 ## V20.0.13 (2026-11-07)
 
 - **Firmware and embedded web version:** `V20.0.13`. Relative to the previous

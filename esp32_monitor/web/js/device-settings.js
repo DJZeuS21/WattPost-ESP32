@@ -445,6 +445,10 @@
                 <strong id="device-bms-ble">—</strong>
               </div>
               <div class="device-settings-row">
+                <span data-i18n="device_settings.ble_signal">Сигнал Bluetooth</span>
+                <strong id="device-bms-rssi">—</strong>
+              </div>
+              <div class="device-settings-row">
                 <span data-i18n="text.cells">Комірки</span>
                 <strong id="device-bms-cells">—</strong>
               </div>
@@ -814,6 +818,19 @@
           );
           setText(this.container, 'device-bms-model', bms.model);
           setText(this.container, 'device-bms-ble', bmsStatus[0]);
+          const currentRssi = Number.isFinite(bms.rssi_dbm) ? bms.rssi_dbm : null;
+          const lastRssi = Number.isFinite(bms.rssi_last_dbm) ? bms.rssi_last_dbm : null;
+          const age = Number.isInteger(bms.rssi_last_age_s) && bms.rssi_last_age_s >= 0
+            ? bms.rssi_last_age_s : null;
+          const rssiText = currentRssi !== null
+            ? `${currentRssi} dBm`
+            : lastRssi !== null
+              ? tr('device_settings.ble_last_signal', {
+                  rssi: lastRssi,
+                  seconds: age === null ? '?' : age,
+                })
+              : null;
+          setText(this.container, 'device-bms-rssi', rssiText);
           // /api/device/status has no cell_count. The live telemetry handler
           // owns this field, so a status poll must not erase its value.
         }

@@ -19,6 +19,7 @@ Local monitoring and history work without an account or internet connection. Opt
 - **Live status:** charging, discharging or idle, state of charge, voltage, current, power and remaining capacity.
 - **Cells and temperatures:** individual cell voltages, minimum, maximum, voltage spread and available temperature sensors.
 - **Up to 14 days of history:** 10-minute averaged records stored in ESP32 Flash and retained across reboots. Daily energy totals, zoomable charts and an hourly load profile.
+- **Bluetooth signal:** show active JK BMS connection RSSI in Device Settings and the last measured value after disconnect.
 - **BMS settings:** inspect protection thresholds, balancing, current limits and temperature limits. For supported JK BMS models, the local interface can edit eligible parameters with change review, sequential writes and fresh readback verification. Cloud settings remain read-only.
 - **Languages:** Ukrainian and English with a UA/EN selector and a saved browser preference, across Dashboard, History, Device Settings, JK BMS Settings and First Setup.
 - **Phone access:** the same interface adapts to smaller screens; no separate app is needed.

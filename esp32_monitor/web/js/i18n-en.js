@@ -60,6 +60,8 @@ WattPostI18n.register('en', {
   "history.tooltip_charging": "Charging:",
   "history.tooltip_discharging": "Discharging:",
   "history.tooltip_soc": "State of charge:",
+  "device_settings.ble_last_signal": "Last: {rssi} dBm ({seconds}s ago)",
+  "device_settings.ble_signal": "Bluetooth signal",
   "device_settings.bms_connection_title": "JK BMS connection",
   "device_settings.bms_found": "JK BMS found: {count}",
   "device_settings.bms_selected": "Selected: {name} {address}",

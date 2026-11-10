@@ -64,6 +64,15 @@ static jk_bms_settings_refresh_t settings_refresh;
 
 #define JK_BMS_USER_SCAN_DURATION_MS 8000
 #define JK_BMS_POLL_TASK_STACK_SIZE 4096u
+#define JK_BMS_RSSI_POLL_INTERVAL_SECONDS 10u
+#define JK_BMS_RSSI_FRESH_SECONDS 30u
+
+/* RSSI is sampled from the active controller connection, never from a
+ * potentially unrelated scanner. Retain the last sample for diagnostics. */
+static int8_t last_rssi_dbm;
+static int64_t last_rssi_measured_us;
+static uint32_t last_rssi_connection_epoch;
+static uint32_t next_rssi_sample_seconds;
 
 typedef enum {
     BLE_SCAN_OWNER_NONE = 0,
@@ -616,6 +625,7 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
             last_cmd_0x96_us = 0;
             connected_since_seconds = connected_at;
             recovery_deadline_seconds = connected_since_seconds + 30;
+            next_rssi_sample_seconds = connected_at + 2u;
             phase = "service";
             connection_handle = conn_handle;
             write_handle = 0;
@@ -646,6 +656,7 @@ static int gap_event(struct ble_gap_event *event, void *arg) {
             last_cmd_0x96_us = 0;
             connected_since_seconds = 0;
             recovery_deadline_seconds = 0;
+            next_rssi_sample_seconds = 0;
             latest_data.valid = false;
             if (selection_active && !selection_validated) {
                 fail_selection_locked(selection_disconnect_error);
@@ -806,6 +817,7 @@ static void on_reset(int reason) {
     }
     connected = false;
     connecting = false;
+    next_rssi_sample_seconds = 0;
     if (forget_active && forget_persisted) {
         forget_active = false;
         forget_persisted = false;
@@ -861,6 +873,9 @@ static void poll_task(void *parameter) {
         uint32_t action_generation = 0u;
         uint32_t action_settings_baseline = 0u;
         uint8_t action_frame[JK_BMS_WRITE_FRAME_LENGTH] = {0};
+        bool sample_rssi = false;
+        uint16_t sample_conn_handle = 0;
+        uint32_t sample_epoch = 0;
 
         portENTER_CRITICAL(&data_lock);
         if (forget_active && forget_persisted) {
@@ -973,7 +988,35 @@ static void poll_task(void *parameter) {
             action_conn_handle = connection_handle;
             action_attr_handle = write_handle;
         }
+        /* HCI RSSI reads run outside the critical section and outside the
+         * NimBLE GAP callback. Never delay a BMS command or BLE recovery. */
+        if (action == POLL_NONE && connected && !selection_active &&
+            !reconnect_active && !forget_active &&
+            next_rssi_sample_seconds != 0u &&
+            now_seconds >= next_rssi_sample_seconds) {
+            sample_rssi = true;
+            sample_conn_handle = connection_handle;
+            sample_epoch = ble_connection_epoch;
+            next_rssi_sample_seconds = now_seconds + JK_BMS_RSSI_POLL_INTERVAL_SECONDS;
+        }
         portEXIT_CRITICAL(&data_lock);
+
+        if (sample_rssi) {
+            int8_t measured_rssi = 127; /* HCI sentinel: RSSI unavailable */
+            const int rc = ble_gap_conn_rssi(sample_conn_handle, &measured_rssi);
+            if (rc == 0 && measured_rssi != 127) {
+                const int64_t measured_at_us = esp_timer_get_time();
+                portENTER_CRITICAL(&data_lock);
+                if (configured && connected && !selection_active &&
+                    connection_handle == sample_conn_handle &&
+                    ble_connection_epoch == sample_epoch) {
+                    last_rssi_dbm = measured_rssi;
+                    last_rssi_measured_us = measured_at_us;
+                    last_rssi_connection_epoch = sample_epoch;
+                }
+                portEXIT_CRITICAL(&data_lock);
+            }
+        }
 
         if (action == POLL_RECOVER) {
             ESP_LOGW(TAG, "Потік BMS завис, перепідключення");
@@ -1061,6 +1104,10 @@ bool jk_bms_ble_start(const jk_bms_ble_target_t *target) {
     bms_operation_phase = JK_BMS_BLE_PHASE_NONE;
     bms_operation_error = JK_BMS_BLE_ERROR_NONE;
     ble_connection_epoch = 0u;
+    last_rssi_dbm = 0;
+    last_rssi_measured_us = 0;
+    last_rssi_connection_epoch = 0u;
+    next_rssi_sample_seconds = 0u;
     latest_settings_epoch = 0u;
     latest_device_info_epoch = 0u;
     jk_bms_write_transaction_init(&write_transaction);
@@ -1378,6 +1425,11 @@ bool jk_bms_ble_select_commit(
     }
 
     if (persisted) {
+        /* A previous BMS RSSI must never be attributed to the new target. */
+        last_rssi_measured_us = 0;
+        last_rssi_connection_epoch = 0u;
+        next_rssi_sample_seconds = connected
+            ? (uint32_t) (esp_timer_get_time() / 1000000) + 2u : 0u;
         target_address = selection_address;
         configured = true;
         selection_active = false;
@@ -1550,6 +1602,9 @@ bool jk_bms_ble_forget_commit(
     configured = false;
     memset(&target_address, 0, sizeof(target_address));
     target_seen = false;
+    last_rssi_measured_us = 0;
+    last_rssi_connection_epoch = 0u;
+    next_rssi_sample_seconds = 0u;
 
     scan_owner = BLE_SCAN_OWNER_NONE;
     user_scan_state = JK_BMS_BLE_SCAN_IDLE;
@@ -1696,6 +1751,35 @@ bool jk_bms_ble_has_target(void) {
 
 bool jk_bms_ble_is_connected(void) {
     return connected;
+}
+
+bool jk_bms_ble_rssi_snapshot(jk_bms_ble_rssi_snapshot_t *snapshot) {
+    if (!snapshot) {
+        return false;
+    }
+    memset(snapshot, 0, sizeof(*snapshot));
+    int64_t measured_at_us = 0;
+    uint32_t sample_epoch = 0;
+    bool link_connected = false;
+    uint32_t epoch = 0;
+    portENTER_CRITICAL(&data_lock);
+    snapshot->valid = configured && last_rssi_measured_us > 0;
+    if (snapshot->valid) {
+        snapshot->dbm = last_rssi_dbm;
+        measured_at_us = last_rssi_measured_us;
+        sample_epoch = last_rssi_connection_epoch;
+    }
+    link_connected = connected;
+    epoch = ble_connection_epoch;
+    portEXIT_CRITICAL(&data_lock);
+
+    if (snapshot->valid) {
+        const int64_t elapsed_us = esp_timer_get_time() - measured_at_us;
+        snapshot->age_s = elapsed_us > 0 ? (uint32_t) (elapsed_us / 1000000) : 0u;
+        snapshot->current = link_connected && sample_epoch == epoch &&
+            snapshot->age_s <= JK_BMS_RSSI_FRESH_SECONDS;
+    }
+    return true;
 }
 
 const char *jk_bms_ble_state(void) {
