@@ -57,7 +57,8 @@ static esp_netif_t *wifi_netif;
 static esp_netif_t *wifi_ap_netif;
 static bool sntp_started;
 static bool mdns_started;
-static volatile bool mdns_recovery_pending;
+static bool mdns_recovery_pending;
+static portMUX_TYPE mdns_request_lock = portMUX_INITIALIZER_UNLOCKED;
 static bool wifi_has_ip;
 static bool wifi_ever_had_ip;
 static bool wifi_sta_started;
@@ -184,6 +185,8 @@ typedef union {
     char live[5120];
     char diagnostics[3072];
     char device_status[3072];
+    char settings[WATTPOST_SETTINGS_JSON_MAX_LEN];
+    char bms_write_policy[3072];
 } http_json_response_buffer_t;
 static http_json_response_buffer_t http_json_response;
 
@@ -4801,24 +4804,17 @@ static bool cloud_settings_snapshot(char *output, size_t output_capacity) {
 }
 
 static esp_err_t settings_handler(httpd_req_t *request) {
-    char *response = malloc(WATTPOST_SETTINGS_JSON_MAX_LEN);
-    if (response == NULL) {
-        return json_response_too_large(request);
-    }
-    if (!format_current_settings_json(
-            response,
-            WATTPOST_SETTINGS_JSON_MAX_LEN,
-            false)) {
-        memset(response, 0, WATTPOST_SETTINGS_JSON_MAX_LEN);
-        free(response);
+    char *response = http_json_response.settings;
+    const size_t capacity = sizeof(http_json_response.settings);
+    if (!format_current_settings_json(response, capacity, false)) {
+        memset(response, 0, capacity);
         return json_response_too_large(request);
     }
 
     httpd_resp_set_type(request, "application/json");
     httpd_resp_set_hdr(request, "Cache-Control", "no-store");
     const esp_err_t result = httpd_resp_sendstr(request, response);
-    memset(response, 0, WATTPOST_SETTINGS_JSON_MAX_LEN);
-    free(response);
+    memset(response, 0, capacity);
     return result;
 }
 
@@ -4847,15 +4843,12 @@ static esp_err_t bms_write_policy_handler(httpd_req_t *request) {
     if (!bms_write_lan_available()) {
         policy.connection_epoch = 0u;
     }
-    char *response = malloc(3072u);
-    if (response == NULL) {
-        return device_api_error(
-            request, "503 Service Unavailable", "memory_unavailable");
-    }
+    char *response = http_json_response.bms_write_policy;
+    const size_t capacity = sizeof(http_json_response.bms_write_policy);
 
     size_t used = 0u;
     bool ok = wattpost_json_appendf(
-        response, 3072u, &used,
+        response, capacity, &used,
         "{\"ok\":true,\"data\":{"
         "\"local_write_available\":%s,"
         "\"model_supported\":%s,"
@@ -4869,22 +4862,19 @@ static esp_err_t bms_write_policy_handler(httpd_req_t *request) {
         const jk_bms_write_spec_t *specs = jk_bms_write_specs(&count);
         for (size_t i = 0; i < count && ok; ++i) {
             ok = wattpost_json_appendf(
-                response, 3072u, &used,
+                response, capacity, &used,
                 "%s\"%s\"", i == 0u ? "" : ",", specs[i].api_key);
         }
     }
     if (ok) {
-        ok = wattpost_json_appendf(response, 3072u, &used, "]}}");
+        ok = wattpost_json_appendf(response, capacity, &used, "]}}");
     }
     if (!ok) {
-        free(response);
         return device_api_error(
             request, "500 Internal Server Error", "internal_error");
     }
     httpd_resp_set_type(request, "application/json");
-    const esp_err_t result = httpd_resp_sendstr(request, response);
-    free(response);
-    return result;
+    return httpd_resp_sendstr(request, response);
 }
 
 static const char *bms_write_state_str(jk_bms_write_tx_state_t state) {
@@ -5441,6 +5431,24 @@ static void start_server(void) {
     ESP_LOGI(TAG, "Веб-сервер запущено");
 }
 
+/* Responder lifecycle belongs to recovery_task; the Wi-Fi event task only posts
+ * requests. Consume before doing work so a concurrent reconnect is not lost. */
+static void request_mdns_recovery(const char *reason) {
+    portENTER_CRITICAL(&mdns_request_lock);
+    mdns_pending_reason = reason;
+    mdns_recovery_pending = true;
+    portEXIT_CRITICAL(&mdns_request_lock);
+}
+
+static const char *take_mdns_recovery_reason(void) {
+    portENTER_CRITICAL(&mdns_request_lock);
+    const char *reason = mdns_recovery_pending ? mdns_pending_reason : NULL;
+    mdns_recovery_pending = false;
+    mdns_pending_reason = "none";
+    portEXIT_CRITICAL(&mdns_request_lock);
+    return reason;
+}
+
 static bool start_mdns(void) {
     if (mdns_started) {
         return true;
@@ -5482,15 +5490,12 @@ static bool restart_mdns(const char *reason) {
     }
 
     if (!start_mdns()) {
-        mdns_pending_reason = reason;
-        mdns_recovery_pending = true;
+        request_mdns_recovery(reason);
         return false;
     }
 
     ++mdns_recovery_count;
     mdns_last_recovery_reason = reason;
-    mdns_pending_reason = "none";
-    mdns_recovery_pending = false;
     return true;
 }
 
@@ -5499,18 +5504,14 @@ static void maintain_mdns(void) {
         return;
     }
 
-    if (mdns_recovery_pending) {
-        restart_mdns(mdns_pending_reason);
+    const char *reason = take_mdns_recovery_reason();
+    if (reason != NULL) {
+        restart_mdns(reason);
         return;
     }
 
     if (!mdns_started) {
         start_mdns();
-        return;
-    }
-
-    if (wattpost_mdns_refresh_due(monotonic_age_seconds(mdns_last_start_us))) {
-        restart_mdns("periodic_refresh");
         return;
     }
 
@@ -5789,8 +5790,7 @@ static void network_event(void *arg, esp_event_base_t base, int32_t id, void *da
         ESP_LOGI(TAG, "Адреса: " IPSTR, IP2STR(&event->ip_info.ip));
         if (reconnected) {
             ++wifi_reconnect_count;
-            mdns_pending_reason = "wifi_reconnect";
-            mdns_recovery_pending = true;
+            request_mdns_recovery("wifi_reconnect");
         }
         wifi_has_ip = true;
         wifi_connecting = false;
@@ -5805,8 +5805,8 @@ static void network_event(void *arg, esp_event_base_t base, int32_t id, void *da
             sntp_started = true;
         }
         start_server();
-        if (!reconnected) {
-            start_mdns();
+        if (recovery_task_handle != NULL) {
+            xTaskNotifyGive(recovery_task_handle);
         }
     }
 }

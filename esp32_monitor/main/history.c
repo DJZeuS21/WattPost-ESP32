@@ -10,6 +10,7 @@
 
 enum {
     HISTORY_PAGE_SIZE = 4096,
+    HISTORY_INIT_READ_SIZE = 512,
     HISTORY_INTERVAL_SECONDS = 600,
     HISTORY_EXPORT_POINTS = 14 * 24 * 6,
     HISTORY_MIN_TIMESTAMP = 1700000000,
@@ -21,8 +22,13 @@ static const esp_partition_t *partition;
 static int32_t newest_index = -1;
 static uint32_t newest_timestamp;
 static int32_t last_erased_sector = -1;
-static uint8_t page[HISTORY_PAGE_SIZE];
+static uint8_t init_read_buffer[HISTORY_INIT_READ_SIZE];
 static wattpost_history_average_t average;
+
+_Static_assert(HISTORY_PAGE_SIZE % HISTORY_INIT_READ_SIZE == 0,
+               "History init reads must not cross sector boundaries");
+_Static_assert(HISTORY_INIT_READ_SIZE % sizeof(wattpost_history_record_t) == 0,
+               "History init reads must contain whole records");
 
 static uint32_t record_count(void) {
 
@@ -102,49 +108,59 @@ static bool prepare_next_slot(uint32_t *index, size_t *offset) {
 }
 
 bool wattpost_history_init(void) {
-    partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, 0x40, "history");
-    if (partition == NULL || partition->size < HISTORY_PAGE_SIZE) {
+    // Publish the partition and write cursor only after a complete scan.
+    partition = NULL;
+    newest_index = -1;
+    newest_timestamp = 0;
+    last_erased_sector = -1;
+
+    const esp_partition_t *storage =
+        esp_partition_find_first(ESP_PARTITION_TYPE_DATA, 0x40, "history");
+    if (storage == NULL || storage->size < HISTORY_PAGE_SIZE ||
+        storage->size % HISTORY_PAGE_SIZE != 0) {
         ESP_LOGE(TAG, "Розділ історії не знайдено");
         return false;
     }
 
-    newest_index = -1;
-    newest_timestamp = 0;
-    last_erased_sector = -1;
-    bool first_sector_erased = false;
+    bool first_sector_erased = true;
+    int32_t found_index = -1;
+    uint32_t found_timestamp = 0;
 
-    for (size_t offset = 0; offset < partition->size; offset += sizeof(page)) {
-        if (esp_partition_read(partition, offset, page, sizeof(page)) != ESP_OK) {
+    const size_t records_per_read = sizeof(init_read_buffer) / sizeof(wattpost_history_record_t);
+    for (size_t offset = 0; offset < storage->size; offset += sizeof(init_read_buffer)) {
+        if (esp_partition_read(storage, offset, init_read_buffer, sizeof(init_read_buffer)) != ESP_OK) {
             ESP_LOGE(TAG, "Не вдалося прочитати історію");
             return false;
         }
-        if (offset == 0) {
-            first_sector_erased = bytes_are_erased(page, sizeof(page));
+        if (offset < HISTORY_PAGE_SIZE && first_sector_erased) {
+            first_sector_erased = bytes_are_erased(init_read_buffer, sizeof(init_read_buffer));
         }
-        for (size_t index = 0; index < sizeof(page) / sizeof(wattpost_history_record_t); ++index) {
+        for (size_t index = 0; index < records_per_read; ++index) {
             wattpost_history_record_t record;
-            memcpy(&record, page + index * sizeof(record), sizeof(record));
-            if (valid(&record) && record.timestamp >= newest_timestamp) {
-                newest_timestamp = record.timestamp;
-                newest_index = (int32_t) ((offset / sizeof(page)) *
-                                          (sizeof(page) / sizeof(record)) + index);
+            memcpy(&record, init_read_buffer + index * sizeof(record), sizeof(record));
+            if (valid(&record) && record.timestamp >= found_timestamp) {
+                found_timestamp = record.timestamp;
+                found_index = (int32_t) (offset / sizeof(record) + index);
             }
         }
     }
 
-    if (newest_index >= 0) {
-        last_erased_sector = (int32_t) ((newest_index * sizeof(wattpost_history_record_t)) / HISTORY_PAGE_SIZE);
+    if (found_index >= 0) {
+        last_erased_sector = (int32_t) ((found_index * sizeof(wattpost_history_record_t)) / HISTORY_PAGE_SIZE);
         ESP_LOGI(TAG, "Історія v2 готова: останній запис %ld, індекс %ld",
-                 (long) newest_timestamp, (long) newest_index);
+                 (long) found_timestamp, (long) found_index);
     } else {
         ESP_LOGI(TAG, "Історія v2 порожня, ініціалізація розділу");
         if (!first_sector_erased &&
-            esp_partition_erase_range(partition, 0, HISTORY_PAGE_SIZE) != ESP_OK) {
+            esp_partition_erase_range(storage, 0, HISTORY_PAGE_SIZE) != ESP_OK) {
             ESP_LOGE(TAG, "Не вдалося очистити перший сектор історії");
             return false;
         }
         last_erased_sector = 0;
     }
+    newest_index = found_index;
+    newest_timestamp = found_timestamp;
+    partition = storage;
     return true;
 }
 

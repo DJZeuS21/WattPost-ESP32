@@ -15,6 +15,8 @@ class RamBudgetSourceTests(unittest.TestCase):
             "char live[5120]",
             "char diagnostics[3072]",
             "char device_status[3072]",
+            "char settings[WATTPOST_SETTINGS_JSON_MAX_LEN]",
+            "char bms_write_policy[3072]",
         ):
             self.assertIn(member, MAIN)
         self.assertEqual(MAIN.count("static http_json_response_buffer_t http_json_response"), 1)
@@ -26,6 +28,15 @@ class RamBudgetSourceTests(unittest.TestCase):
             "static char device_status_response[",
         ):
             self.assertNotIn(old, MAIN)
+
+    def test_settings_and_write_policy_use_http_scratch(self):
+        for handler, member in (
+            ("settings_handler", "settings"),
+            ("bms_write_policy_handler", "bms_write_policy"),
+        ):
+            body = MAIN.split(f"static esp_err_t {handler}(", 1)[1].split("\n}", 1)[0]
+            self.assertIn(f"char *response = http_json_response.{member};", body)
+            self.assertNotIn("malloc(", body)
 
     def test_cloud_upload_payloads_share_one_static_union(self):
         for member in (

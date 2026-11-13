@@ -15,6 +15,7 @@
 static uint8_t mock_flash[131072]; // 128 KiB
 static uint32_t mock_erase_count[32];
 static int mock_partial_write_bytes = -1;
+static size_t mock_read_failure_offset = SIZE_MAX;
 static esp_partition_t mock_partition = {
     .size = sizeof(mock_flash),
     .label = "history"
@@ -29,7 +30,7 @@ const esp_partition_t *esp_partition_find_first(int type, int subtype, const cha
 }
 
 esp_err_t esp_partition_read(const esp_partition_t *part, size_t src_offset, void *dst, size_t size) {
-    if (src_offset + size > part->size) {
+    if (src_offset + size > part->size || src_offset == mock_read_failure_offset) {
         return ESP_FAIL;
     }
     memcpy(dst, mock_flash + src_offset, size);
@@ -380,6 +381,13 @@ static void test_full_fill_and_wraparound(void) {
 static void test_reboot_recovery(void) {
     printf("[5/12] Testing reboot recovery...\n");
 
+    // A late read error must not publish a cursor found in an earlier sector.
+    mock_read_failure_offset = sizeof(mock_flash) - 512;
+    assert(!wattpost_history_init());
+    assert(partition == NULL);
+    assert(wattpost_history_newest_timestamp() == 0);
+    mock_read_failure_offset = SIZE_MAX;
+
     // Simulate reboot: init scans partition and resumes newest_index = 63
     assert(wattpost_history_init());
     assert(newest_index == 63);
@@ -550,10 +558,19 @@ static void test_empty_reboot_does_not_wear_sector_zero(void) {
     }
     assert(mock_erase_count[0] == 0);
 
-    memset(mock_flash, 0x00, sizeof(mock_flash));
+    /* The first sector is dirty only in the last initialization chunk. */
+    mock_flash[4095] = 0;
     memset(mock_erase_count, 0, sizeof(mock_erase_count));
+    mock_read_failure_offset = 3584;
+    assert(!wattpost_history_init());
+    assert(partition == NULL);
+    assert(wattpost_history_newest_timestamp() == 0);
+    assert(mock_erase_count[0] == 0);
+    assert(mock_flash[4095] == 0);
+    mock_read_failure_offset = SIZE_MAX;
     assert(wattpost_history_init());
     assert(mock_erase_count[0] == 1);
+    assert(mock_flash[4095] == 0xFF);
     for (int reboot = 0; reboot < 5; ++reboot) {
         assert(wattpost_history_init());
     }

@@ -1,5 +1,49 @@
 # WattPost ESP32 — release provenance and verification
 
+## V20.0.16 (2026-11-13)
+
+- **Firmware/web version:** `V20.0.16`. Includes the V20.0.15 RAM changes:
+  History startup buffer reduced from 4096 to 512 bytes (3584 bytes less
+  static RAM); Settings/write-policy use the existing response scratch space,
+  avoiding a temporary 3072-byte allocation. History startup publishes its
+  cursor after a complete scan.
+- **mDNS reliability:** one recovery task owns start/free operations and retains
+  reconnect requests received during a restart. Official `espressif/mdns 1.15.1`
+  includes the upstream queued-TX double-free fix. The unproven six-hour
+  preventive teardown is removed; five-minute announcements and recovery
+  after Wi-Fi reconnect remain. This does not repair router multicast filtering
+  or client resolver problems. Wi-Fi power saving and task-stack budgets remain.
+- **Exact firmware source / embedded build ID:**
+  `d157db65fb4f3f1bc2bf31139ed440622301904f` / `d157db65fb4f`.
+  The public export has its own Git commit; official images are the original
+  gated firmware, not a rebuild of this export.
+- **Signed app-only Cloud OTA:** 1,608,224 bytes; SHA-256
+  `d7c5cbd0a2534bc3432fb7357fd0a09fbd4790da39a96942bf0a4897834d745f`.
+  Detached ECDSA-P256 signature independently verified against the embedded
+  public key. The signing key and matching ELF stay private.
+- **Full USB installer:** `WattPost-ESP32-full.bin`, 1,739,296 bytes; SHA-256
+  `5c6e1ab27cbc18a7424bff60236b068bf7722e5296188f3da65c429c8eebef62`.
+  Install at `0x0` on classic ESP32 / 4 MB Flash for a **fresh installation**.
+  Exact original components verified at `0x1000`, `0x8000`, `0xF000`, `0x20000`;
+  the image contains no saved user NVS. Use signed Cloud OTA to update an
+  already configured device and preserve settings and History.
+- **Validation:** canonical release gate passed 236 Python + C suites,
+  6 proxy, 265 serial Web tests and one clean ESP-IDF 5.5.5 build; upstream
+  mDNS ASan/UBSan 22/22. Bench completed 1000 teardown/start cycles. Exact
+  signed private OTA passed on the primary ESP32 with JK BMS, Cloud, History,
+  Settings and ordinary BLE/Wi-Fi reconnect, followed by a completed 24-hour
+  run and more than 41 hours without new panic/reboot. The separate 48-hour
+  network observation completed; client/WLAN losses remain a known limit.
+- **RAM/behavior limits:** typical free heap around 53 KB; rare low-water mark
+  5420 bytes remains under investigation. Brief BLE reconnects and two recovered
+  Cloud failures occurred during the 24-hour run, comparable to the previous
+  firmware. No guarantee of uninterrupted RF or universal `.local` resolution.
+  Existing OTA validation marks app valid after ten seconds; it does not
+  automatically roll back a later regression.
+- **Compatibility:** NVS/History format and partition layout, JK BMS settings,
+  Cloud telemetry/poll intervals, OTA trust and shared local/cloud UI preserved.
+  No private backend, infrastructure, device data or credentials are exported.
+
 ## V20.0.14 (2026-11-10)
 
 - **Firmware/web version:** `V20.0.14`. Reads connected-link RSSI from the
